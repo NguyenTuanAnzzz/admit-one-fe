@@ -4,6 +4,7 @@ import { AnimatePresence, m } from 'framer-motion'
 import { PrimaryButton } from '../components/Button'
 import { OtpInput } from '../components/OtpInput'
 import { Spinner } from '../components/Spinner'
+import useCountdown from '../hook/useCountdown'
 import useVerifyEmail from '../hook/useVerifyEmail'
 import { EASE_OUT, fadeUp, stagger } from '../lib/motion'
 
@@ -34,15 +35,23 @@ function SuccessMark() {
   )
 }
 
+/** 75 giây thành "1:15". */
+function formatClock(seconds) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+}
+
 const textLink = 'inline-flex min-h-11 items-center font-semibold text-action-fg underline underline-offset-2 hover:text-fg'
 
 /**
- * Trang nhập OTP sau khi đăng ký. Email nhận từ useRegister qua location state.
+ * Trang nhập OTP sau khi đăng ký. Email và otpExpiresAt (lúc mã hết hạn, do backend trả về) nhận từ useRegister qua location state.
+ * Đếm ngược tới otpExpiresAt; hết giờ thì khóa nút gửi vì backend sẽ từ chối mã.
  * Mở thẳng /verify-email (không qua đăng ký) thì không biết xác minh email nào, nên chỉ dẫn về trang đăng ký.
  */
 export default function VerifyEmailPage() {
-  const email = useLocation().state?.email
+  const { email, otpExpiresAt } = useLocation().state ?? {}
   const { code, error, loading, handleChange, handleSubmit } = useVerifyEmail(email)
+  const secondsLeft = useCountdown(otpExpiresAt)
+  const expired = secondsLeft === 0
 
   useEffect(() => {
     const previous = document.title
@@ -75,14 +84,25 @@ export default function VerifyEmailPage() {
         Nhập mã xác minh
       </m.h1>
       <m.p variants={fadeUp} className="mt-3 text-body text-fg">
-        Chúng tôi đã gửi mã 6 ký tự (chữ và số) đến <span className="font-semibold break-all">{email}</span>. Mã có
-        hiệu lực trong 15 phút.
+        Chúng tôi đã gửi mã 6 ký tự (chữ và số) đến <span className="font-semibold break-all">{email}</span>.
       </m.p>
 
       <m.form variants={fadeUp} onSubmit={handleSubmit} noValidate className="mt-6">
-        <p id="otp-nhan" className="text-body-sm font-medium text-fg">
-          Mã xác minh <span aria-hidden="true" className="text-action-fg">*</span>
-        </p>
+        <div className="flex items-baseline justify-between gap-3">
+          <p id="otp-nhan" className="text-body-sm font-medium text-fg">
+            Mã xác minh <span aria-hidden="true" className="text-action-fg">*</span>
+          </p>
+          {/* Không đọc từng giây cho trình đọc màn hình (aria-live off), chỉ báo khi hết hạn ở khung bên dưới */}
+          {secondsLeft !== null && !expired && (
+            <p
+              role="timer"
+              aria-live="off"
+              className={`text-body-sm font-semibold tabular-nums ${secondsLeft <= 10 ? 'text-danger' : 'text-fg-muted'}`}
+            >
+              Hết hạn sau {formatClock(secondsLeft)}
+            </p>
+          )}
+        </div>
         <OtpInput
           value={code}
           onChange={handleChange}
@@ -109,14 +129,14 @@ export default function VerifyEmailPage() {
           )}
         </AnimatePresence>
 
-        <PrimaryButton type="submit" disabled={loading} className="mt-5 w-full">
+        <PrimaryButton type="submit" disabled={loading || expired} className="mt-5 w-full">
           {loading && <Spinner />}
           {loading ? 'Đang xác minh...' : 'Xác minh email'}
         </PrimaryButton>
 
-        {/* Lỗi backend hiện ngay dưới nút gửi, giống trang đăng ký */}
+        {/* Lỗi backend hoặc mã hết hạn hiện ngay dưới nút gửi, giống trang đăng ký */}
         <AnimatePresence>
-          {error.form && (
+          {(error.form || expired) && (
             <m.p
               role="alert"
               initial={{ opacity: 0, y: -6 }}
@@ -124,7 +144,7 @@ export default function VerifyEmailPage() {
               exit={{ opacity: 0 }}
               className="mt-3 rounded-input bg-danger-subtle px-4 py-3 text-body-sm text-danger"
             >
-              {error.form}
+              {expired ? 'Mã đã hết hạn nên không thể xác minh nữa.' : error.form}
             </m.p>
           )}
         </AnimatePresence>

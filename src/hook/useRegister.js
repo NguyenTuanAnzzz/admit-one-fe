@@ -29,7 +29,7 @@ function focusFirstError(errors) {
 /**
  * Toàn bộ logic form đăng ký. Mỗi ô cần name trùng một khóa trong EMPTY để handleChange biết cập nhật ô nào.
  * error: lỗi kiểm tra theo từng ô (error.email...), riêng error.form là lỗi backend trả về hoặc mất mạng.
- * Đăng ký xong thì chuyển sang /verify-email, gửi kèm email qua location state để trang đó biết mã gửi tới đâu.
+ * Đăng ký xong thì chuyển sang /verify-email, gửi kèm email và lúc mã hết hạn qua location state.
  */
 export default function useRegister() {
   const [values, setValues] = useState(EMPTY)
@@ -59,7 +59,10 @@ export default function useRegister() {
         phone: values.phone.replace(/\s/g, ''),
         password: values.password,
       })
-      navigate('/verify-email', { state: { email: created?.email ?? values.email.trim() } })
+      // otpExpiresAt: lúc mã hết hạn do backend tính, trang xác minh đếm ngược tới mốc này
+      navigate('/verify-email', {
+        state: { email: created?.email ?? values.email.trim(), otpExpiresAt: created?.otpExpiresAt },
+      })
     } catch (err) {
       // Lỗi từ backend hiện nguyên văn ở khung chung trên nút gửi
       setError({ form: err.message })
