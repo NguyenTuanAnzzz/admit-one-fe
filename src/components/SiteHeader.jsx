@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { HeaderLogo } from './HeaderLogo'
 
 const NAV = [
-  { href: '#su-kien', label: 'Sự kiện' },
-  { href: '#gia-ve', label: 'Giá theo khu' },
-  { href: '#cach-mua', label: 'Cách mua vé' },
-  { href: '#hoi-dap', label: 'Hỏi đáp' },
+  { href: '#events', label: 'Sự kiện' },
+  { href: '#pricing', label: 'Giá theo khu' },
+  { href: '#how-to-buy', label: 'Cách mua vé' },
+  { href: '#faq', label: 'Hỏi đáp' },
 ]
 
 const navLink = 'inline-flex min-h-11 items-center rounded-nav px-3 text-body-sm font-medium text-fg-muted hover:bg-surface-sunken hover:text-title'

@@ -58,9 +58,9 @@ export function EventList({ query, onClearQuery }) {
   }
 
   return (
-    <section id="su-kien" aria-labelledby="su-kien-tieu-de" className="px-gutter py-section-sm md:py-section">
+    <section id="events" aria-labelledby="events-tieu-de" className="px-gutter py-section-sm md:py-section">
       <div className="mx-auto max-w-page">
-        <SectionHeading id="su-kien-tieu-de" title="Sự kiện tại Hà Nội">
+        <SectionHeading id="events-tieu-de" title="Sự kiện tại Hà Nội">
           <div role="group" aria-label="Lọc theo trạng thái" className="flex flex-wrap gap-2">
             {FILTERS.map((f) => (
               <button
@@ -226,7 +226,7 @@ function EventCard({ ref, index, event: e, now, open, onToggle }) {
               </div>
             </dl>
             {e.featured ? (
-              <a href="#gia-ve" className="mt-3 inline-flex min-h-11 items-center text-body-sm font-semibold text-title underline underline-offset-4 hover:text-fg-muted">
+              <a href="#pricing" className="mt-3 inline-flex min-h-11 items-center text-body-sm font-semibold text-title underline underline-offset-4 hover:text-fg-muted">
                 Xem sơ đồ khu và giá vé
               </a>
             ) : (

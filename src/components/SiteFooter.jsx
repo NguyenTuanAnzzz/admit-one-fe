@@ -1,8 +1,8 @@
 const LINKS = [
-  { href: '#su-kien', label: 'Sự kiện' },
-  { href: '#gia-ve', label: 'Giá theo khu' },
-  { href: '#cach-mua', label: 'Cách mua vé' },
-  { href: '#hoi-dap', label: 'Hỏi đáp' },
+  { href: '#events', label: 'Sự kiện' },
+  { href: '#pricing', label: 'Giá theo khu' },
+  { href: '#how-to-buy', label: 'Cách mua vé' },
+  { href: '#faq', label: 'Hỏi đáp' },
 ]
 
 export function SiteFooter() {

@@ -34,3 +34,20 @@ export async function verifyEmail({ email, code }) {
   if (!res.ok) throw new Error(data?.message ?? 'Xác minh chưa thành công. Vui lòng thử lại.')
   return data
 }
+
+export async function resendOtp({ email }) {
+  let res
+  try {
+    res = await fetch(`${API_URL}/auth/resend-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Gửi lại mã chưa thành công. Vui lòng thử lại.')
+  return data
+}

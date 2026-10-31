@@ -31,10 +31,10 @@ const STEPS = [
 
 export function BuyingFlow() {
   return (
-    <section id="cach-mua" aria-labelledby="cach-mua-tieu-de" className="px-gutter pb-section-sm md:pb-section">
+    <section id="how-to-buy" aria-labelledby="how-to-buy-tieu-de" className="px-gutter pb-section-sm md:pb-section">
       <div className="mx-auto grid max-w-page gap-10 rounded-card bg-surface px-5 py-8 border border-card-line sm:px-8 md:py-10 lg:grid-cols-[1.15fr_1fr] lg:gap-12">
         <div>
-          <h2 id="cach-mua-tieu-de" className="font-display text-heading-sm font-bold text-title md:text-heading">
+          <h2 id="how-to-buy-tieu-de" className="font-display text-heading-sm font-bold text-title md:text-heading">
             Từ lúc mở bán tới lúc có vé trong email
           </h2>
           <m.ol {...inView} variants={stagger(0.1)} className="mt-6 divide-y divide-line border-y border-line">

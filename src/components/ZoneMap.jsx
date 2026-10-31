@@ -41,9 +41,9 @@ export function ZoneMap({ user, onLogin }) {
   const zone = zones.find((z) => z.id === selectedId) ?? zones[0]
 
   return (
-    <section id="gia-ve" aria-labelledby="gia-ve-tieu-de" className="px-gutter pb-section-sm md:pb-section">
+    <section id="pricing" aria-labelledby="pricing-tieu-de" className="px-gutter pb-section-sm md:pb-section">
       <div className="mx-auto max-w-page">
-        <SectionHeading id="gia-ve-tieu-de" title="Chọn khu ghế">
+        <SectionHeading id="pricing-tieu-de" title="Chọn khu ghế">
           <p className="text-body-sm text-fg-muted">
             {ev.title} · {ev.venue}
           </p>
@@ -188,7 +188,7 @@ function ZoneDetail({ zone, now, user, onLogin }) {
             </>
           ) : (
             <>
-              {/* TODO: dẫn tới /su-kien/:id/phong-cho khi dựng trang phòng chờ và chọn ghế */}
+              {/* TODO: dẫn tới /events/:id/waiting-room khi dựng trang phòng chờ và chọn ghế */}
               <PrimaryButton type="button" disabled className="w-full">
                 Phòng chờ và chọn ghế: đang xây
               </PrimaryButton>

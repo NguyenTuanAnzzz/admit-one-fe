@@ -30,9 +30,9 @@ const ITEMS = [
 
 export function Faq() {
   return (
-    <section id="hoi-dap" aria-labelledby="hoi-dap-tieu-de" className="px-gutter pb-section-sm md:pb-section">
+    <section id="faq" aria-labelledby="faq-tieu-de" className="px-gutter pb-section-sm md:pb-section">
       <div className="mx-auto max-w-page">
-        <SectionHeading id="hoi-dap-tieu-de" title="Câu hỏi thường gặp" />
+        <SectionHeading id="faq-tieu-de" title="Câu hỏi thường gặp" />
         <div className="mt-6 divide-y divide-line border-y border-line">
           {ITEMS.map((item) => (
             <details key={item.q} className="group">

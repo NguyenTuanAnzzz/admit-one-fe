@@ -97,7 +97,7 @@ export default function RegisterPage() {
 
       <p className="mt-2 text-center text-body-sm text-fg-muted">
         Đã có tài khoản?{' '}
-        <Link to="/?dang-nhap" className={textLink}>
+        <Link to="/?login" className={textLink}>
           Đăng nhập
         </Link>
       </p>

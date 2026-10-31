@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { AnimatePresence, m } from 'framer-motion'
-import { PrimaryButton } from '../components/Button'
+import { GhostButton, PrimaryButton } from '../components/Button'
 import { OtpInput } from '../components/OtpInput'
 import { Spinner } from '../components/Spinner'
 import useCountdown from '../hook/useCountdown'
@@ -44,12 +44,13 @@ const textLink = 'inline-flex min-h-11 items-center font-semibold text-action-fg
 
 /**
  * Trang nhập OTP sau khi đăng ký. Email và otpExpiresAt (lúc mã hết hạn, do backend trả về) nhận từ useRegister qua location state.
- * Đếm ngược tới otpExpiresAt; hết giờ thì khóa nút gửi vì backend sẽ từ chối mã.
+ * Đếm ngược tới otpExpiresAt; hết giờ thì khóa nút gửi vì backend sẽ từ chối mã, và mở nút gửi lại mã.
+ * Backend chỉ cho gửi lại khi mã cũ đã hết hạn, nên nút gửi lại cũng khóa trong lúc đếm.
  * Mở thẳng /verify-email (không qua đăng ký) thì không biết xác minh email nào, nên chỉ dẫn về trang đăng ký.
  */
 export default function VerifyEmailPage() {
   const { email, otpExpiresAt } = useLocation().state ?? {}
-  const { code, error, loading, handleChange, handleSubmit } = useVerifyEmail(email)
+  const { code, error, loading, resending, notice, handleChange, handleSubmit, handleResend } = useVerifyEmail(email)
   const secondsLeft = useCountdown(otpExpiresAt)
   const expired = secondsLeft === 0
 
@@ -144,13 +145,37 @@ export default function VerifyEmailPage() {
               exit={{ opacity: 0 }}
               className="mt-3 rounded-input bg-danger-subtle px-4 py-3 text-body-sm text-danger"
             >
-              {expired ? 'Mã đã hết hạn nên không thể xác minh nữa.' : error.form}
+              {error.form || 'Mã đã hết hạn. Bấm "Gửi lại mã" để nhận mã mới.'}
+            </m.p>
+          )}
+          {notice && !error.form && !expired && (
+            <m.p
+              role="status"
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              className="mt-3 rounded-input bg-success-subtle px-4 py-3 text-body-sm text-fg"
+            >
+              {notice}
             </m.p>
           )}
         </AnimatePresence>
       </m.form>
 
-      <m.p variants={fadeUp} className="mt-4 text-body-sm text-fg-muted">
+      {/* Mở khi mã đã hết hạn (backend từ chối gửi lại trước đó), hoặc khi không biết hạn mã */}
+      <m.div variants={fadeUp} className="mt-4 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <p className="text-body-sm text-fg-muted">Chưa nhận được mã?</p>
+        <GhostButton type="button" onClick={handleResend} disabled={resending || (secondsLeft !== null && !expired)}>
+          {resending && <Spinner />}
+          {resending
+            ? 'Đang gửi lại...'
+            : secondsLeft !== null && !expired
+              ? `Gửi lại mã sau ${formatClock(secondsLeft)}`
+              : 'Gửi lại mã'}
+        </GhostButton>
+      </m.div>
+
+      <m.p variants={fadeUp} className="mt-2 text-body-sm text-fg-muted">
         Không thấy email? Hãy xem thư mục Spam hoặc Quảng cáo. Nhập sai email?{' '}
         <Link to="/register" className={textLink}>
           Đăng ký lại
