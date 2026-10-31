@@ -1,0 +1,62 @@
+@import "tailwindcss";
+/* Toàn bộ design token (primitive, semantic, component) nằm trong tailwind.config.js */
+@config "../tailwind.config.js";
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 96px;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-fg;
+    color-scheme: light;
+    margin: 0;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  a[href],
+  button:not(:disabled),
+  summary,
+  [role="button"] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Trạng thái bấm chung cho mọi nút: lún xuống 1px, không chỉ đổi màu */
+  button:active:not(:disabled),
+  a[href]:active,
+  summary:active {
+    transform: translateY(1px);
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-3 outline-focus;
+    outline-style: solid;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  /*
+    0s chứ không phải 0.01ms: transition-property mặc định là all, nên 0.01ms biến mọi thuộc tính của mọi phần tử
+    thành có chuyển tiếp. Lúc CSS vừa tải, viền của #root chuyển từ 3px (mặc định) về 0 và Chrome kẹt giữa chừng,
+    hiện một thanh đen trên header rồi mới mất.
+  */
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0s !important;
+  }
+}

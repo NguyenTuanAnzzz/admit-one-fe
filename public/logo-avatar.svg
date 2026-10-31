@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="logo-title">
+  <title id="logo-title">Admit One</title>
+  <!-- Nền cam san hô, màu hành động chính của trang (#cf3a20) -->
+  <rect width="512" height="512" rx="112" fill="#cf3a20"/>
+  <!-- Tấm vé nghiêng nhẹ: hai khuyết tròn ở mép, đường xé nét đứt, số 1 cho "Admit One" -->
+  <g transform="translate(256 256) rotate(-12) scale(1.1) translate(-256 -256)">
+    <path fill="#ffffff" d="M120 156H392A24 24 0 0 1 416 180V228A28 28 0 0 0 416 284V332A24 24 0 0 1 392 356H120A24 24 0 0 1 96 332V284A28 28 0 0 0 96 228V180A24 24 0 0 1 120 156Z"/>
+    <path stroke="#cf3a20" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 17" d="M176 182V330"/>
+    <path fill="#cf3a20" d="M294 196H326V316H294V230L266 244V214Z"/>
+  </g>
+</svg>
