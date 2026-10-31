@@ -17,3 +17,20 @@ export async function register({ fullName, email, phone, password }) {
   if (!res.ok) throw new Error(data?.message ?? 'Đăng ký chưa thành công. Vui lòng thử lại.')
   return data
 }
+
+export async function verifyEmail({ email, code }) {
+  let res
+  try {
+    res = await fetch(`${API_URL}/auth/verify-email`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    })
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Xác minh chưa thành công. Vui lòng thử lại.')
+  return data
+}
