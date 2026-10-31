@@ -119,13 +119,3 @@ export const fetchEvents = () => simulate(EVENTS, 700, 'Không tải được da
 
 /** GET /events/:id/seats ở mức khu */
 export const fetchZones = () => simulate(ZONES, 500, 'Không tải được sơ đồ khu.')
-
-/** POST /auth/login. Bản demo chỉ nhận email của DEMO_USER. */
-export function login(email) {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (email.trim().toLowerCase() === DEMO_USER.email) resolve(DEMO_USER)
-      else reject(new Error('Không tìm thấy tài khoản với email này.'))
-    }, 600)
-  })
-}

@@ -7,7 +7,7 @@ const OTP_LENGTH = 6
 /**
  * Logic trang nhập OTP. code là mảng 6 ký tự, mỗi phần tử ứng với một ô.
  * error.code: chưa nhập đủ mã. error.form: lỗi backend trả về hoặc mất mạng, hiện dưới nút gửi.
- * Xác minh xong thì về trang chủ và mở sẵn hộp đăng nhập.
+ * Xác minh xong thì sang trang đăng nhập, điền sẵn email và báo đã xác minh.
  * Gửi lại mã: ghi otpExpiresAt mới vào location state (thay mục lịch sử hiện tại), nên trang đếm lại và F5 vẫn giữ mốc mới.
  */
 export default function useVerifyEmail(email) {
@@ -38,7 +38,7 @@ export default function useVerifyEmail(email) {
     setLoading(true)
     try {
       await verifyEmail({ email, code: otp })
-      navigate('/?login', { replace: true })
+      navigate('/login', { replace: true, state: { email, verified: true } })
     } catch (err) {
       setError({ form: err.message })
     } finally {

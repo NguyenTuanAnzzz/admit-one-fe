@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { LazyMotion, MotionConfig, domAnimation } from 'framer-motion'
 import { SiteHeader } from '../components/SiteHeader'
 import { Hero } from '../components/Hero'
@@ -7,16 +8,20 @@ import { ZoneMap } from '../components/ZoneMap'
 import { BuyingFlow } from '../components/BuyingFlow'
 import { Faq } from '../components/Faq'
 import { SiteFooter } from '../components/SiteFooter'
-import { LoginDialog } from '../components/LoginDialog'
+import { clearSession, getSessionUser } from '../lib/session'
 
 export default function HomePage() {
-  const [user, setUser] = useState(null)
-  // ?login: trang đăng ký dẫn về đây để mở sẵn hộp đăng nhập
-  const [loginOpen, setLoginOpen] = useState(() => new URLSearchParams(window.location.search).has('login'))
+  const [user, setUser] = useState(getSessionUser)
 
   const [query, setQuery] = useState('')
 
-  const openLogin = () => setLoginOpen(true)
+  const navigate = useNavigate()
+  const openLogin = () => navigate('/login')
+  // TODO: gọi API đăng xuất khi backend có, để xoá cả cookie refreshToken
+  const logout = () => {
+    clearSession()
+    setUser(null)
+  }
 
   const search = (q) => {
     setQuery(q)
@@ -32,7 +37,7 @@ export default function HomePage() {
           <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-pill focus:bg-title focus:px-4 focus:py-2 focus:text-fg-inverse">
             Bỏ qua tới nội dung
           </a>
-          <SiteHeader user={user} onLogin={openLogin} onLogout={() => setUser(null)} onSearch={search} />
+          <SiteHeader user={user} onLogin={openLogin} onLogout={logout} onSearch={search} />
           <main id="main-content">
             <Hero />
             <EventList query={query} onClearQuery={() => setQuery('')} />
@@ -41,14 +46,6 @@ export default function HomePage() {
             <Faq />
           </main>
           <SiteFooter />
-          <LoginDialog
-            open={loginOpen}
-            onClose={() => setLoginOpen(false)}
-            onSuccess={(u) => {
-              setUser(u)
-              setLoginOpen(false)
-            }}
-          />
         </div>
       </MotionConfig>
     </LazyMotion>
