@@ -1,17 +1,19 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { refresh } from '../api/authApi'
 import { createFetchWithAuth } from '../api/fetchWithAuth'
+import { getMe } from '../api/userApi'
 
 const AuthContext = createContext(null)
 
-// TODO: backend chưa có GET /me nên tạm lấy email từ access token (JWT, phần sub). Có /me thì gọi API lấy họ tên.
-function userFromToken(token) {
-  try {
-    const { sub } = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
-    return { email: sub, name: sub, initials: sub.slice(0, 2).toUpperCase() }
-  } catch {
-    return null
-  }
+// Tên Việt đặt họ trước nên lấy chữ đầu của hai từ cuối: "Nguyễn Tuấn An" → "TA"
+function initialsOf(fullName) {
+  return fullName
+    .trim()
+    .split(/\s+/)
+    .slice(-2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase()
 }
 
 /**
@@ -20,18 +22,36 @@ function userFromToken(token) {
  * loading = true tới khi hỏi xong, để không nháy nút "Đăng nhập" với người đang đăng nhập.
  */
 export function AuthProvider({ children }) {
-  const [accessToken, setAccessToken] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [accessToken, setToken] = useState(null)
+  const [refreshing, setRefreshing] = useState(true)
+  // Kết quả /me: undefined = chưa hỏi xong, null = hỏi lỗi
+  const [me, setMe] = useState(undefined)
 
-  const user = useMemo(() => (accessToken ? userFromToken(accessToken) : null), [accessToken])
-  const fetchWithAuth = useMemo(() => createFetchWithAuth(accessToken, setAccessToken), [accessToken])
+  // Mất token (đăng xuất, refresh hỏng) thì quên luôn user cũ, lần đăng nhập sau hỏi lại /me từ đầu
+  const setAccessToken = useCallback((token) => {
+    if (!token) setMe(undefined)
+    setToken(token)
+  }, [])
+
+  const user = accessToken ? (me ?? null) : null
+  const loading = refreshing || (accessToken !== null && me === undefined)
+
+  const fetchWithAuth = useMemo(() => createFetchWithAuth(accessToken, setAccessToken), [accessToken, setAccessToken])
+
+  // Có access token thì hỏi backend người đang đăng nhập là ai. Token đổi do refresh thì user cũ vẫn hiện trong lúc hỏi lại.
+  useEffect(() => {
+    if (!accessToken) return
+    getMe(fetchWithAuth)
+      .then((data) => setMe({ ...data, name: data.fullName, initials: initialsOf(data.fullName) }))
+      .catch(() => setMe(null))
+  }, [accessToken, fetchWithAuth])
 
   useEffect(() => {
     refresh()
       .then((data) => setAccessToken(data.accessToken))
       .catch(() => setAccessToken(null))
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setRefreshing(false))
+  }, [setAccessToken])
 
   // TODO: gọi API đăng xuất khi backend có. Chưa xoá cookie refreshToken thì F5 sẽ tự đăng nhập lại
   const logout = () => setAccessToken(null)
