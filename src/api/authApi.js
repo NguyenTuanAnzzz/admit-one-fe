@@ -52,7 +52,7 @@ export async function resendOtp({ email }) {
   return data
 }
 
-export async function login({ email, password }) {
+export async function login({ email, password, rememberMe }) {
   let res
   try {
     res = await fetch(`${API_URL}/auth/login`, {
@@ -60,7 +60,7 @@ export async function login({ email, password }) {
       headers: { 'Content-Type': 'application/json' },
       // Cho trình duyệt nhận cookie refreshToken backend đặt khi đăng nhập
       credentials: 'include',
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, rememberMe }),
     })
   } catch {
     throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
@@ -68,5 +68,22 @@ export async function login({ email, password }) {
 
   const data = await res.json().catch(() => null)
   if (!res.ok) throw new Error(data?.message ?? 'Đăng nhập chưa thành công. Vui lòng thử lại.')
+  return data
+}
+
+// Đổi cookie refreshToken (httpOnly) lấy access token mới. Không có cookie hoặc hết hạn thì ném lỗi.
+export async function refresh() {
+  let res
+  try {
+    res = await fetch(`${API_URL}/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
   return data
 }

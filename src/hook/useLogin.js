@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { login } from '../api/authApi'
-import { saveAccessToken } from '../lib/session'
+import { useAuth } from '../context/AuthContext'
 
 const FIELD_ORDER = ['email', 'password']
 
@@ -23,14 +23,15 @@ function focusFirstError(errors) {
  */
 export default function useLogin() {
   const location = useLocation()
-  const [values, setValues] = useState(() => ({ email: location.state?.email ?? '', password: '' }))
+  const [values, setValues] = useState(() => ({ email: location.state?.email ?? '', password: '', rememberMe: false }))
   const [error, setError] = useState({})
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+  const { setAccessToken } = useAuth()
 
   function handleChange(e) {
-    const { name, value } = e.target
-    setValues((v) => ({ ...v, [name]: value }))
+    const { name, value, type, checked } = e.target
+    setValues((v) => ({ ...v, [name]: type === 'checkbox' ? checked : value }))
   }
 
   async function handleSubmit(e) {
@@ -44,8 +45,8 @@ export default function useLogin() {
 
     setLoading(true)
     try {
-      const data = await login({ email: values.email.trim(), password: values.password })
-      saveAccessToken(data.accessToken)
+      const data = await login({ email: values.email.trim(), password: values.password, rememberMe: values.rememberMe })
+      setAccessToken(data.accessToken)
       navigate('/', { replace: true })
     } catch (err) {
       setError({ form: err.message })

@@ -11,7 +11,7 @@ const NAV = [
 const navLink = 'inline-flex min-h-11 items-center rounded-nav px-3 text-body-sm font-medium text-fg-muted hover:bg-surface-sunken hover:text-title'
 
 /** Thanh điều hướng trắng dính đầu trang: logo, ô tìm kiếm, liên kết, đăng nhập. */
-export function SiteHeader({ user, onLogin, onLogout, onSearch }) {
+export function SiteHeader({ user, authReady = true, onLogin, onLogout, onSearch }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [query, setQuery] = useState('')
 
@@ -81,7 +81,8 @@ export function SiteHeader({ user, onLogin, onLogout, onSearch }) {
               </button>
             </>
           ) : (
-            <button type="button" onClick={onLogin} className={navLink}>
+            // Chưa hỏi xong backend thì ẩn nút (vẫn giữ chỗ) để không nháy "Đăng nhập" với người đang đăng nhập
+            <button type="button" onClick={onLogin} className={`${navLink} ${authReady ? '' : 'invisible'}`}>
               Đăng nhập
             </button>
           )}

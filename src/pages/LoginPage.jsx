@@ -41,7 +41,13 @@ export default function LoginPage() {
           <TextField label="Mật khẩu" required type="password" autoComplete="current-password" placeholder="Mật khẩu của bạn" {...field('password')} />
         </div>
 
-        <PrimaryButton type="submit" disabled={loading} className="mt-5 w-full">
+        {/* Không tích: đóng trình duyệt là phải đăng nhập lại. Tích: giữ đăng nhập 7 ngày */}
+        <label className="mt-2 inline-flex min-h-11 cursor-pointer items-center gap-2 text-body-sm text-fg">
+          <input type="checkbox" name="rememberMe" checked={values.rememberMe} onChange={handleChange} className="size-4 accent-action" />
+          Ghi nhớ đăng nhập
+        </label>
+
+        <PrimaryButton type="submit" disabled={loading} className="mt-3 w-full">
           {loading && <Spinner />}
           {loading ? 'Đang đăng nhập...' : 'Đăng nhập'}
         </PrimaryButton>

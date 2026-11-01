@@ -8,20 +8,15 @@ import { ZoneMap } from '../components/ZoneMap'
 import { BuyingFlow } from '../components/BuyingFlow'
 import { Faq } from '../components/Faq'
 import { SiteFooter } from '../components/SiteFooter'
-import { clearSession, getSessionUser } from '../lib/session'
+import { useAuth } from '../context/AuthContext'
 
 export default function HomePage() {
-  const [user, setUser] = useState(getSessionUser)
+  const { user, loading, logout } = useAuth()
 
   const [query, setQuery] = useState('')
 
   const navigate = useNavigate()
   const openLogin = () => navigate('/login')
-  // TODO: gọi API đăng xuất khi backend có, để xoá cả cookie refreshToken
-  const logout = () => {
-    clearSession()
-    setUser(null)
-  }
 
   const search = (q) => {
     setQuery(q)
@@ -37,7 +32,7 @@ export default function HomePage() {
           <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-pill focus:bg-title focus:px-4 focus:py-2 focus:text-fg-inverse">
             Bỏ qua tới nội dung
           </a>
-          <SiteHeader user={user} onLogin={openLogin} onLogout={logout} onSearch={search} />
+          <SiteHeader user={user} authReady={!loading} onLogin={openLogin} onLogout={logout} onSearch={search} />
           <main id="main-content">
             <Hero />
             <EventList query={query} onClearQuery={() => setQuery('')} />
