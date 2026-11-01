@@ -87,3 +87,19 @@ export async function refresh() {
   if (!res.ok) throw new Error(data?.message ?? 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
   return data
 }
+
+export async function logout() {
+  let res
+  try {
+    res = await fetch(`${API_URL}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Đăng xuất chưa thành công.')
+  return data
+}

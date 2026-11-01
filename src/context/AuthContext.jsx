@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { refresh } from '../api/authApi'
+import { logout as logoutApi, refresh } from '../api/authApi'
 import { createFetchWithAuth } from '../api/fetchWithAuth'
 import { getMe } from '../api/userApi'
 
@@ -53,8 +53,12 @@ export function AuthProvider({ children }) {
       .finally(() => setRefreshing(false))
   }, [setAccessToken])
 
-  // TODO: gọi API đăng xuất khi backend có. Chưa xoá cookie refreshToken thì F5 sẽ tự đăng nhập lại
-  const logout = () => setAccessToken(null)
+  // Backend xoá cookie refreshToken. Gọi API lỗi (mất mạng) thì vẫn đăng xuất ở FE
+  const logout = () => {
+    logoutApi()
+      .catch(() => {})
+      .finally(() => setAccessToken(null))
+  }
 
   return (
     <AuthContext value={{ accessToken, setAccessToken, user, loading, fetchWithAuth, logout }}>
