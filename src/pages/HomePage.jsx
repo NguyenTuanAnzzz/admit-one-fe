@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { LazyMotion, MotionConfig, domAnimation } from 'framer-motion'
 import { SiteHeader } from '../components/SiteHeader'
 import { Hero } from '../components/Hero'
@@ -13,7 +13,15 @@ import { useAuth } from '../context/AuthContext'
 export default function HomePage() {
   const { user, loading, logout } = useAuth()
 
-  const [query, setQuery] = useState('')
+  const location = useLocation()
+  // Tìm kiếm từ header ở trang khác (trang cá nhân) chuyển về đây kèm query
+  const [query, setQuery] = useState(() => location.state?.query ?? '')
+
+  // Bấm "Sự kiện", "Hỏi đáp"... ở trang khác: về trang chủ với #mục, cuộn tới mục đó sau khi trang hiện ra
+  useEffect(() => {
+    const target = location.state?.query ? 'events' : location.hash.slice(1)
+    if (target) document.getElementById(target)?.scrollIntoView({ block: 'start' })
+  }, [location])
 
   const navigate = useNavigate()
   const openLogin = () => navigate('/login')

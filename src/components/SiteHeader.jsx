@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { canUseDashboard } from '../lib/roles'
 import { HeaderLogo } from './HeaderLogo'
 
 const NAV = [
@@ -9,9 +11,18 @@ const NAV = [
 ]
 
 const navLink = 'inline-flex min-h-11 items-center rounded-nav px-3 text-body-sm font-medium text-fg-muted hover:bg-surface-sunken hover:text-title'
+const mobileLink = 'flex min-h-11 items-center rounded-input px-3 text-body font-semibold text-fg hover:bg-surface-sunken'
 
-/** Thanh điều hướng trắng dính đầu trang: logo, ô tìm kiếm, liên kết, đăng nhập. */
-export function SiteHeader({ user, authReady = true, onLogin, onLogout, onSearch }) {
+/** Liên kết tới một mục trên trang chủ. Đang ở trang khác (linkBase) thì chuyển về trang chủ, HomePage tự cuộn tới mục đó. */
+function SectionLink({ hash, linkBase, ...props }) {
+  return linkBase ? <Link to={{ pathname: linkBase, hash }} {...props} /> : <a href={hash} {...props} />
+}
+
+/**
+ * Thanh điều hướng trắng dính đầu trang: logo, ô tìm kiếm, liên kết, đăng nhập.
+ * linkBase: để trống khi ở trang chủ (liên kết #mục cuộn tại chỗ), truyền "/" khi dùng ở trang khác.
+ */
+export function SiteHeader({ user, authReady = true, linkBase = '', onLogin, onLogout, onSearch }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [query, setQuery] = useState('')
 
@@ -31,7 +42,7 @@ export function SiteHeader({ user, authReady = true, onLogin, onLogout, onSearch
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface">
       <div className="mx-auto flex max-w-page flex-wrap items-center gap-x-4 gap-y-3 px-gutter py-3 lg:flex-nowrap">
-        <HeaderLogo className="order-1" />
+        {linkBase ? <HeaderLogo className="order-1" href={import.meta.env.BASE_URL} label="Admit One, về trang chủ" /> : <HeaderLogo className="order-1" />}
 
         {/* Nhãn "Tìm sự kiện" luôn hiện (không chỉ dựa vào placeholder); viền focus đậm bao cả ô khi dùng bàn phím */}
         <form
@@ -61,9 +72,9 @@ export function SiteHeader({ user, authReady = true, onLogin, onLogout, onSearch
           <ul className="flex items-center gap-1">
             {NAV.map((item) => (
               <li key={item.href}>
-                <a href={item.href} className={navLink}>
+                <SectionLink hash={item.href} linkBase={linkBase} className={navLink}>
                   {item.label}
-                </a>
+                </SectionLink>
               </li>
             ))}
           </ul>
@@ -72,10 +83,18 @@ export function SiteHeader({ user, authReady = true, onLogin, onLogout, onSearch
         <div className="order-2 ml-auto flex items-center gap-1 md:ml-0 lg:order-4">
           {user ? (
             <>
-              <span aria-hidden="true" className="inline-flex size-9 items-center justify-center rounded-full bg-avatar text-body-sm font-bold text-avatar-fg">
-                {user.initials}
-              </span>
-              <span className="hidden text-body-sm font-semibold xl:inline">{user.name}</span>
+              {canUseDashboard(user) && (
+                <Link to="/dashboard" className={`${navLink} hidden md:inline-flex`}>
+                  Dashboard
+                </Link>
+              )}
+              {/* Bấm avatar hoặc tên để vào trang cá nhân. Chữ ẩn dưới xl nên tên trang nằm ở aria-label */}
+              <Link to="/profile" aria-label={`Trang cá nhân của ${user.name}`} className="inline-flex min-h-11 items-center gap-2 rounded-nav px-1 text-title hover:bg-surface-sunken xl:pr-3">
+                <span aria-hidden="true" className="inline-flex size-9 items-center justify-center rounded-full bg-avatar text-body-sm font-bold text-avatar-fg">
+                  {user.initials}
+                </span>
+                <span aria-hidden="true" className="hidden text-body-sm font-semibold xl:inline">{user.name}</span>
+              </Link>
               <button type="button" onClick={onLogout} className={navLink}>
                 Đăng xuất
               </button>
@@ -106,11 +125,25 @@ export function SiteHeader({ user, authReady = true, onLogin, onLogout, onSearch
           <ul className="flex flex-col">
             {NAV.map((item) => (
               <li key={item.href}>
-                <a href={item.href} onClick={() => setMenuOpen(false)} className="flex min-h-11 items-center rounded-input px-3 text-body font-semibold text-fg hover:bg-surface-sunken">
+                <SectionLink hash={item.href} linkBase={linkBase} onClick={() => setMenuOpen(false)} className={mobileLink}>
                   {item.label}
-                </a>
+                </SectionLink>
               </li>
             ))}
+            {user && (
+              <li className="mt-1 border-t border-line pt-1">
+                <Link to="/profile" onClick={() => setMenuOpen(false)} className={mobileLink}>
+                  Trang cá nhân
+                </Link>
+              </li>
+            )}
+            {canUseDashboard(user) && (
+              <li>
+                <Link to="/dashboard" onClick={() => setMenuOpen(false)} className={mobileLink}>
+                  Dashboard
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       )}

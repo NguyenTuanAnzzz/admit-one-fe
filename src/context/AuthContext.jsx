@@ -16,6 +16,11 @@ function initialsOf(fullName) {
     .toUpperCase()
 }
 
+// MeResponse của backend + name, initials cho header
+function toUser(data) {
+  return { ...data, name: data.fullName, initials: initialsOf(data.fullName) }
+}
+
 /**
  * Access token giữ trong state (bộ nhớ), refresh token nằm trong cookie httpOnly.
  * Mở app hoặc F5: gọi refresh bằng cookie để lấy lại access token; không có cookie thì là khách.
@@ -42,7 +47,7 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!accessToken) return
     getMe(fetchWithAuth)
-      .then((data) => setMe({ ...data, name: data.fullName, initials: initialsOf(data.fullName) }))
+      .then((data) => setMe(toUser(data)))
       .catch(() => setMe(null))
   }, [accessToken, fetchWithAuth])
 
@@ -60,8 +65,11 @@ export function AuthProvider({ children }) {
       .finally(() => setAccessToken(null))
   }
 
+  // Sửa hồ sơ xong: lấy MeResponse backend trả về thay cho user cũ, header đổi tên ngay không cần gọi lại /me
+  const updateUser = (data) => setMe(toUser(data))
+
   return (
-    <AuthContext value={{ accessToken, setAccessToken, user, loading, fetchWithAuth, logout }}>
+    <AuthContext value={{ accessToken, setAccessToken, user, loading, fetchWithAuth, logout, updateUser }}>
       {children}
     </AuthContext>
   )

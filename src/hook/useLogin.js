@@ -47,7 +47,8 @@ export default function useLogin() {
     try {
       const data = await login({ email: values.email.trim(), password: values.password, rememberMe: values.rememberMe })
       setAccessToken(data.accessToken)
-      navigate('/', { replace: true })
+      // Bị ProtectRoute đẩy sang đây thì quay về trang đang mở dở, không thì về trang chủ
+      navigate(location.state?.from ?? '/', { replace: true })
     } catch (err) {
       setError({ form: err.message })
     } finally {
