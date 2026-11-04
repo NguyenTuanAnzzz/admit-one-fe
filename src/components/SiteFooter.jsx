@@ -1,9 +1,5 @@
-const LINKS = [
-  { href: '#events', label: 'Sự kiện' },
-  { href: '#pricing', label: 'Giá theo khu' },
-  { href: '#how-to-buy', label: 'Cách mua vé' },
-  { href: '#faq', label: 'Hỏi đáp' },
-]
+import { Link } from 'react-router-dom'
+import { NAV } from '../lib/nav'
 
 export function SiteFooter() {
   return (
@@ -15,13 +11,14 @@ export function SiteFooter() {
             Vé có số ghế cho concert và sự kiện tại Hà Nội. Thanh toán đang chạy ở chế độ thử nghiệm của VNPay và MoMo.
           </p>
         </div>
+        {/* Cùng các trang với menu trên header */}
         <nav aria-label="Liên kết cuối trang">
           <ul className="flex flex-wrap gap-x-2 gap-y-1">
-            {LINKS.map((l) => (
-              <li key={l.href}>
-                <a href={l.href} className="inline-flex min-h-11 items-center rounded-nav px-3 text-body-sm font-medium text-fg-muted hover:bg-surface-sunken hover:text-title">
+            {NAV.map((l) => (
+              <li key={l.to}>
+                <Link to={l.to} className="inline-flex min-h-11 items-center rounded-nav px-3 text-body-sm font-medium text-fg-muted hover:bg-surface-sunken hover:text-title">
                   {l.label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

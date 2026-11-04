@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext'
 import useAdminEvents from '../../hook/useAdminEvents'
 import { EVENT_STATUS, EVENT_STATUS_LABEL, EVENT_STATUS_STYLE, statusActions } from '../../lib/eventStatus'
 import { hanoiParts } from '../../lib/format'
+import { pageWindow } from '../../lib/pagination'
 
 const addLink =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-pill border-[1.5px] border-button-primary bg-button-primary px-6 text-body-sm font-semibold text-button-primary-fg hover:border-button-primary-hover hover:bg-button-primary-hover'
@@ -47,18 +48,6 @@ const formatHanoi = (iso) => {
 // Ngày "2026-12-01" tính theo giờ Hà Nội, từ đầu ngày tới hết ngày, đổi sang ISO UTC gửi backend
 const dayStartIso = (day) => (day ? new Date(`${day}T00:00:00+07:00`).toISOString() : '')
 const dayEndIso = (day) => (day ? new Date(`${day}T23:59:59+07:00`).toISOString() : '')
-
-/** Số trang hiện trên thanh phân trang: trang đầu, trang cuối, 2 trang quanh trang hiện tại, "…" ở chỗ bị cắt */
-function pageWindow(current, total) {
-  const pages = new Set([0, total - 1, current - 1, current, current + 1].filter((p) => p >= 0 && p < total))
-  const sorted = [...pages].sort((a, b) => a - b)
-  const out = []
-  sorted.forEach((p, i) => {
-    if (i > 0 && p - sorted[i - 1] > 1) out.push('gap-' + p)
-    out.push(p)
-  })
-  return out
-}
 
 function EventRow({ event, busy, onAction }) {
   return (

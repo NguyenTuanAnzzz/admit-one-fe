@@ -1,26 +1,25 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
+import { NAV } from '../lib/nav'
 import { canUseDashboard } from '../lib/roles'
 import { HeaderLogo } from './HeaderLogo'
 
-const NAV = [
-  { href: '#events', label: 'Sự kiện' },
-  { href: '#pricing', label: 'Giá theo khu' },
-  { href: '#how-to-buy', label: 'Cách mua vé' },
-  { href: '#faq', label: 'Hỏi đáp' },
-]
-
 const navLink = 'inline-flex min-h-11 items-center rounded-nav px-3 text-body-sm font-medium text-fg-muted hover:bg-surface-sunken hover:text-title'
+// Trang đang mở (aria-current="page" do NavLink tự gắn): chữ đậm màu mực để biết mình đang ở đâu
+const navLinkCurrent = 'aria-[current=page]:font-semibold aria-[current=page]:text-title'
 const mobileLink = 'flex min-h-11 items-center rounded-input px-3 text-body font-semibold text-fg hover:bg-surface-sunken'
 
-/** Liên kết tới một mục trên trang chủ. Đang ở trang khác (linkBase) thì chuyển về trang chủ, HomePage tự cuộn tới mục đó. */
-function SectionLink({ hash, linkBase, ...props }) {
-  return linkBase ? <Link to={{ pathname: linkBase, hash }} {...props} /> : <a href={hash} {...props} />
+function NavItem({ item, className, onClick }) {
+  return (
+    <NavLink to={item.to} onClick={onClick} className={`${className} ${navLinkCurrent}`}>
+      {item.label}
+    </NavLink>
+  )
 }
 
 /**
  * Thanh điều hướng trắng dính đầu trang: logo, ô tìm kiếm, liên kết, đăng nhập.
- * linkBase: để trống khi ở trang chủ (liên kết #mục cuộn tại chỗ), truyền "/" khi dùng ở trang khác.
+ * linkBase: để trống ở trang chủ (logo cuộn lên đầu trang), truyền "/" ở trang khác (logo về trang chủ).
  */
 export function SiteHeader({ user, authReady = true, linkBase = '', onLogin, onLogout, onSearch }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -71,10 +70,8 @@ export function SiteHeader({ user, authReady = true, linkBase = '', onLogin, onL
         <nav aria-label="Điều hướng chính" className="order-2 ml-auto hidden md:block lg:order-3">
           <ul className="flex items-center gap-1">
             {NAV.map((item) => (
-              <li key={item.href}>
-                <SectionLink hash={item.href} linkBase={linkBase} className={navLink}>
-                  {item.label}
-                </SectionLink>
+              <li key={item.to ?? item.href}>
+                <NavItem item={item} className={navLink} />
               </li>
             ))}
           </ul>
@@ -124,10 +121,8 @@ export function SiteHeader({ user, authReady = true, linkBase = '', onLogin, onL
         <nav id="menu-di-dong" aria-label="Điều hướng di động" className="border-t border-line px-gutter py-2 md:hidden">
           <ul className="flex flex-col">
             {NAV.map((item) => (
-              <li key={item.href}>
-                <SectionLink hash={item.href} linkBase={linkBase} onClick={() => setMenuOpen(false)} className={mobileLink}>
-                  {item.label}
-                </SectionLink>
+              <li key={item.to ?? item.href}>
+                <NavItem item={item} onClick={() => setMenuOpen(false)} className={mobileLink} />
               </li>
             ))}
             {user && (

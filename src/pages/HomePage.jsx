@@ -14,22 +14,19 @@ export default function HomePage() {
   const { user, loading, logout } = useAuth()
 
   const location = useLocation()
-  // Tìm kiếm từ header ở trang khác (trang cá nhân) chuyển về đây kèm query
-  const [query, setQuery] = useState(() => location.state?.query ?? '')
+  // Từ khoá lọc danh sách mẫu trên trang chủ (EventList). Tìm ở header thì sang trang /events có dữ liệu thật
+  const [query, setQuery] = useState('')
 
-  // Bấm "Sự kiện", "Hỏi đáp"... ở trang khác: về trang chủ với #mục, cuộn tới mục đó sau khi trang hiện ra
+  // Bấm "Giá theo khu", "Hỏi đáp"... ở trang khác: về trang chủ với #mục, cuộn tới mục đó sau khi trang hiện ra
   useEffect(() => {
-    const target = location.state?.query ? 'events' : location.hash.slice(1)
+    const target = location.hash.slice(1)
     if (target) document.getElementById(target)?.scrollIntoView({ block: 'start' })
   }, [location])
 
   const navigate = useNavigate()
   const openLogin = () => navigate('/login')
 
-  const search = (q) => {
-    setQuery(q)
-    document.getElementById('events')?.scrollIntoView({ block: 'start' })
-  }
+  const search = (q) => navigate(q ? `/events?q=${encodeURIComponent(q)}` : '/events')
 
   return (
     // LazyMotion + domAnimation: chỉ nạp phần animation trang cần, nhẹ hơn cả thư viện.
