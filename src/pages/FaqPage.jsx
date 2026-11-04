@@ -16,7 +16,7 @@ export default function FaqPage() {
     <main id="main-content">
       <div className="mx-auto max-w-page px-gutter pt-section-sm pb-6">
         <h1 className="font-display text-heading font-bold text-title md:text-heading-lg">Hỏi đáp</h1>
-        <p className="mt-2 max-w-2xl text-body text-fg-muted">Giữ ghế, thanh toán, hoàn tiền và soát vé ở cổng. Bấm vào câu hỏi để xem trả lời.</p>
+        <p className="mt-2 max-w-2xl text-body text-fg-muted">Giữ vé, thanh toán, hoàn tiền và soát vé ở cổng. Bấm vào câu hỏi để xem trả lời.</p>
       </div>
       <Faq />
       <div className="mx-auto max-w-page px-gutter pb-section-sm">

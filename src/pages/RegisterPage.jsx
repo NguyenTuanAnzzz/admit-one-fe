@@ -29,7 +29,7 @@ export default function RegisterPage() {
     <m.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
       <h1 className="font-display text-heading font-bold text-title">Tạo tài khoản</h1>
       <p className="mt-2 text-body-sm text-fg-muted">
-        Đăng ký để giữ ghế và nhận vé QR qua email. Ô có dấu <span className="text-action-fg">*</span> là bắt buộc.
+        Đăng ký để giữ vé và nhận vé QR qua email. Ô có dấu <span className="text-action-fg">*</span> là bắt buộc.
       </p>
 
       {/* Hai ô một hàng từ sm trở lên để cả form vừa một màn hình, không phải cuộn */}

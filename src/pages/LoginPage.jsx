@@ -27,7 +27,7 @@ export default function LoginPage() {
   return (
     <m.div initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { duration: 0.3 } }}>
       <h1 className="font-display text-heading font-bold text-title">Đăng nhập</h1>
-      <p className="mt-2 text-body-sm text-fg-muted">Đăng nhập để giữ ghế và xem vé đã mua.</p>
+      <p className="mt-2 text-body-sm text-fg-muted">Đăng nhập để giữ vé và xem vé đã mua.</p>
 
       {verified && (
         <p role="status" className="mt-4 rounded-input bg-success-subtle px-4 py-3 text-body-sm text-fg">

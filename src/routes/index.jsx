@@ -17,15 +17,13 @@ import VerifyEmailPage from '../pages/VerifyEmailPage'
 import ProtectRole from './ProtectRole'
 import ProtectRoute from './ProtectRoute'
 
-// Trình dựng sơ đồ kéo theo Konva (vài trăm kB): chỉ tải khi admin mở trang này, trang chủ không phải tải.
-// Suspense chờ tải nằm ở DashboardLayout
-const DashboardEventSeatMap = lazy(() => import('../pages/dashboard/DashboardEventSeatMap'))
-// Trang quản lý sự kiện chỉ admin dùng: tải khi mở, khách không phải tải
+// Trang quản lý chỉ admin dùng: tải khi mở, khách không phải tải. Suspense chờ tải nằm ở DashboardLayout
 const DashboardEvents = lazy(() => import('../pages/dashboard/DashboardEvents'))
 const DashboardEventForm = lazy(() => import('../pages/dashboard/DashboardEventForm'))
+const DashboardEventTiers = lazy(() => import('../pages/dashboard/DashboardEventTiers'))
 const DashboardStaff = lazy(() => import('../pages/dashboard/DashboardStaff'))
 const DashboardStaffForm = lazy(() => import('../pages/dashboard/DashboardStaffForm'))
-// Trang chi tiết sự kiện cũng dùng Konva (sơ đồ chọn ghế). Suspense chờ tải nằm ở PublicLayout
+// Suspense chờ tải nằm ở PublicLayout
 const EventDetailPage = lazy(() => import('../pages/EventDetailPage'))
 
 // Mục dashboard đã có trang thật: [đường dẫn con, trang], '' là trang chính của mục. Mục chưa có ở đây hiện trang "Sắp có"
@@ -34,7 +32,7 @@ const DASHBOARD_PAGES = {
     ['', DashboardEvents],
     ['new', DashboardEventForm],
     [':id/edit', DashboardEventForm],
-    [':id/seatmap', DashboardEventSeatMap],
+    [':id/tiers', DashboardEventTiers],
   ],
   staff: [
     ['', DashboardStaff],

@@ -1,18 +1,18 @@
 import { SectionHeading } from './ui'
 
-/** Câu hỏi lấy từ các tình huống trong spec.md (giữ ghế, phòng chờ, giới hạn vé, trả tiền muộn, check-in). */
+/** Câu hỏi lấy từ các tình huống trong spec.md (giữ vé, phòng chờ, giới hạn vé, trả tiền muộn, check-in). */
 const ITEMS = [
   {
     q: 'Hết 10 phút mà tôi chưa thanh toán xong thì sao?',
-    a: 'Ghế tự trở lại sơ đồ cho người khác chọn và đơn chuyển sang “Hết hạn giữ ghế”. Bạn chưa bị trừ tiền. Muốn mua tiếp thì chọn lại ghế còn trống.',
+    a: 'Vé tự trở lại cho người khác mua và đơn chuyển sang “Hết hạn giữ vé”. Bạn chưa bị trừ tiền. Muốn mua tiếp thì chọn lại hạng vé còn vé.',
   },
   {
-    q: 'Tôi đã trả tiền đúng lúc hết hạn giữ ghế. Tôi có mất tiền không?',
-    a: 'Không. Nếu ghế vẫn còn trống, hệ thống vẫn xuất vé cho bạn. Nếu ghế đã có người khác giữ hoặc mua, đơn được đánh dấu chờ hoàn tiền và bạn nhận email báo ngay.',
+    q: 'Tôi đã trả tiền đúng lúc hết hạn giữ vé. Tôi có mất tiền không?',
+    a: 'Không. Nếu hạng vé vẫn còn vé, hệ thống vẫn xuất vé cho bạn. Nếu vé đã có người khác giữ hoặc mua hết, đơn được đánh dấu chờ hoàn tiền và bạn nhận email báo ngay.',
   },
   {
     q: 'Vì sao tôi phải xếp hàng trong phòng chờ?',
-    a: 'Lúc mở bán có hàng nghìn người vào cùng lúc. Phòng chờ cho từng lượt vào trang chọn ghế để trang không bị sập. Màn hình phòng chờ cho biết bạn đang đứng thứ mấy.',
+    a: 'Lúc mở bán có hàng nghìn người vào cùng lúc. Phòng chờ cho từng lượt vào trang chọn vé để trang không bị sập. Màn hình phòng chờ cho biết bạn đang đứng thứ mấy.',
   },
   {
     q: 'Mở nhiều tab hoặc nhiều trình duyệt có giúp vào nhanh hơn không?',
@@ -20,11 +20,11 @@ const ITEMS = [
   },
   {
     q: 'Một tài khoản mua được bao nhiêu vé?',
-    a: 'Tối đa 4 vé cho mỗi sự kiện, tính cả các đơn đang giữ ghế. Tài khoản cần xác thực email trước khi mua.',
+    a: 'Tối đa 4 vé cho mỗi sự kiện, tính cả các đơn đang giữ vé. Tài khoản cần xác thực email trước khi mua.',
   },
   {
     q: 'Tôi có cần in vé không?',
-    a: 'Không cần. Trình mã QR trên điện thoại ở cổng. Mỗi ghế có một mã riêng, nên nếu mua cho bạn bè, bạn có thể gửi từng vé cho từng người. Mã đã quét một lần thì không dùng lại được.',
+    a: 'Không cần. Trình mã QR trên điện thoại ở cổng. Mỗi vé có một mã riêng, nên nếu mua cho bạn bè, bạn có thể gửi từng vé cho từng người. Mã đã quét một lần thì không dùng lại được.',
   },
 ]
 

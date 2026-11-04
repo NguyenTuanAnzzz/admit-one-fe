@@ -22,10 +22,10 @@ export const DEMO_USER = {
   email: 'linh.dtl@gmail.com',
 }
 
-/** Đơn đang giữ ghế mẫu, minh họa phiếu giữ ghế 10 phút. */
+/** Đơn đang giữ vé mẫu, minh họa phiếu giữ vé 10 phút. */
 export const SAMPLE_HOLD = {
   id: 'ADM-2026-00417',
-  seats: ['VIP H-14', 'VIP H-15'],
+  tickets: ['VIP', 'VIP'],
   total: 2500000,
   remainingSeconds: 581,
 }
@@ -45,13 +45,6 @@ export const FEATURED_EVENT = {
   priceTo: 1250000,
   stats: { total: 8400, available: 3996 },
 }
-
-const ZONES = [
-  { id: 'VIP', name: 'Khu VIP', capacity: 480, available: 453, price: 1250000, opensAt: null, position: 'Sát sân khấu, giữa sàn' },
-  { id: 'A', name: 'Khu A', capacity: 2100, available: 747, price: 950000, opensAt: null, position: 'Sàn, sau khu VIP' },
-  { id: 'B', name: 'Khu B', capacity: 2600, available: 1030, price: 750000, opensAt: null, position: 'Khán đài tầng 1' },
-  { id: 'C', name: 'Khu C', capacity: 3220, available: 1766, price: 650000, opensAt: '2026-11-08T10:00:00+07:00', position: 'Khán đài tầng 2' },
-]
 
 /** Ba sự kiện sau sự kiện chính là dữ liệu giả để thử bộ lọc trạng thái (C-02). */
 const EVENTS = [
@@ -117,5 +110,3 @@ function simulate(data, delay, errorMessage) {
 /** GET /events */
 export const fetchEvents = () => simulate(EVENTS, 700, 'Không tải được danh sách sự kiện.')
 
-/** GET /events/:id/seats ở mức khu */
-export const fetchZones = () => simulate(ZONES, 500, 'Không tải được sơ đồ khu.')

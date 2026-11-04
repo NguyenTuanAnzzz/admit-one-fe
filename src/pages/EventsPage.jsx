@@ -173,7 +173,7 @@ export default function EventsPage() {
   return (
     <main id="main-content" className="mx-auto w-full max-w-page px-gutter py-section-sm">
       <h1 className="font-display text-heading font-bold text-title md:text-heading-lg">Sự kiện tại Hà Nội</h1>
-      <p className="mt-2 text-body text-fg-muted">Concert, kịch, hòa nhạc đã mở bán hoặc sắp mở bán. Mọi vé đều có số ghế.</p>
+      <p className="mt-2 text-body text-fg-muted">Concert, kịch, hòa nhạc đã mở bán hoặc sắp mở bán.</p>
 
       <div role="group" aria-label="Lọc theo trạng thái" className="mt-6 flex flex-wrap gap-2">
         {FILTERS.map((s) => (

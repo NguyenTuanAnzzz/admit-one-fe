@@ -12,19 +12,19 @@ const STEPS = [
     body: 'Mỗi tài khoản giữ một chỗ trong hàng. Mở thêm tab không làm bạn lên nhanh hơn, vị trí được tính theo lúc bạn vào hàng.',
   },
   {
-    title: 'Chọn tối đa 4 ghế trên sơ đồ',
-    body: 'Ghế người khác vừa giữ hoặc vừa mua đổi màu ngay trên màn hình của bạn, không cần tải lại trang.',
+    title: 'Chọn hạng vé và số lượng, tối đa 4 vé',
+    body: 'Số vé còn lại của từng hạng cập nhật ngay trên màn hình của bạn, không cần tải lại trang.',
   },
   {
-    title: 'Ghế được giữ cho bạn 10 phút',
-    body: 'Nhiều ghế được giữ cùng lúc hoặc không ghế nào, không có chuyện giữ được một nửa. Đổi ý thì bấm hủy để nhả ghế cho người sau.',
+    title: 'Vé được giữ cho bạn 10 phút',
+    body: 'Giữ đủ số vé bạn chọn hoặc không giữ vé nào, không có chuyện giữ được một nửa. Đổi ý thì bấm hủy để nhả vé cho người sau.',
   },
   {
     title: 'Thanh toán qua VNPay hoặc MoMo',
-    body: 'Hết 10 phút mà chưa thanh toán, ghế tự trở lại sơ đồ.',
+    body: 'Hết 10 phút mà chưa thanh toán, vé tự trở lại cho người khác mua.',
   },
   {
-    title: 'Nhận vé qua email, mỗi ghế một mã QR',
+    title: 'Nhận vé qua email, mỗi vé một mã QR',
     body: 'Vé cũng nằm trong mục Đơn của tôi để tải lại bất cứ lúc nào. Mã đã quét ở cổng thì không dùng lại được.',
   },
 ]
@@ -58,7 +58,7 @@ export function BuyingFlow() {
   )
 }
 
-/** Phiếu giữ ghế mẫu với đồng hồ 10 phút chạy thật, minh họa bước 3 và 4. */
+/** Phiếu giữ vé mẫu với đồng hồ 10 phút chạy thật, minh họa bước 3 và 4. */
 function HoldReceipt() {
   const order = SAMPLE_HOLD
   const [left, setLeft] = useState(order.remainingSeconds)
@@ -71,18 +71,18 @@ function HoldReceipt() {
     return () => clearInterval(id)
   }, [expired])
 
-  const unit = order.total / order.seats.length
+  const unit = order.total / order.tickets.length
 
   return (
-    <m.figure {...inView} variants={fadeUp} className="self-start lg:mt-6" aria-labelledby="phieu-giu-ghe">
-      <figcaption id="phieu-giu-ghe" className="mb-3 text-body-sm text-fg-muted">
-        Ví dụ: phiếu giữ ghế của một đơn hàng mẫu
+    <m.figure {...inView} variants={fadeUp} className="self-start lg:mt-6" aria-labelledby="phieu-giu-ve">
+      <figcaption id="phieu-giu-ve" className="mb-3 text-body-sm text-fg-muted">
+        Ví dụ: phiếu giữ vé của một đơn hàng mẫu
       </figcaption>
       <div className="rounded-card border border-card-line bg-ticket">
         <div className="flex items-start justify-between gap-4 p-5 sm:p-6">
           <div>
             <p className="text-caption text-fg-muted">Đơn {order.id}</p>
-            <p className="mt-1 font-display text-subheading font-bold text-title">{expired ? 'Đã hết hạn giữ ghế' : 'Đang giữ ghế'}</p>
+            <p className="mt-1 font-display text-subheading font-bold text-title">{expired ? 'Đã hết hạn giữ vé' : 'Đang giữ vé'}</p>
           </div>
           <div className="text-right">
             <p className="text-caption text-fg-muted">Còn lại</p>
@@ -118,16 +118,16 @@ function HoldReceipt() {
         </div>
 
         <table className="w-full border-t border-line text-body-sm">
-          <caption className="sr-only">Ghế trong đơn</caption>
+          <caption className="sr-only">Vé trong đơn</caption>
           <thead>
             <tr className="text-left text-caption text-fg-muted">
-              <th scope="col" className="px-5 pt-4 pb-2 font-semibold sm:px-6">Ghế</th>
+              <th scope="col" className="px-5 pt-4 pb-2 font-semibold sm:px-6">Hạng vé</th>
               <th scope="col" className="px-5 pt-4 pb-2 text-right font-semibold sm:px-6">Giá</th>
             </tr>
           </thead>
           <tbody>
-            {order.seats.map((s) => (
-              <tr key={s} className={expired ? 'text-fg-muted line-through' : ''}>
+            {order.tickets.map((s, i) => (
+              <tr key={i} className={expired ? 'text-fg-muted line-through' : ''}>
                 <td className="px-5 py-1.5 sm:px-6">{s}</td>
                 <td className="px-5 py-1.5 text-right tabular-nums sm:px-6">{formatMoney(unit)}</td>
               </tr>
@@ -146,7 +146,7 @@ function HoldReceipt() {
         <div className="px-5 pt-2 pb-5 sm:px-6">
           {expired ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-body-sm text-fg-muted">Hai ghế đã trở lại sơ đồ cho người khác chọn.</p>
+              <p className="text-body-sm text-fg-muted">Hai vé đã trở lại cho người khác mua.</p>
               <GhostButton type="button" onClick={() => setLeft(order.remainingSeconds)}>
                 Chạy lại ví dụ
               </GhostButton>
@@ -154,7 +154,7 @@ function HoldReceipt() {
           ) : (
             <ul className="flex flex-col gap-2 text-body-sm sm:flex-row sm:gap-5">
               <li className="font-semibold">Thanh toán qua VNPay hoặc MoMo</li>
-              <li className="text-fg-muted">Hết giờ thì ghế tự nhả</li>
+              <li className="text-fg-muted">Hết giờ thì vé tự nhả</li>
             </ul>
           )}
         </div>

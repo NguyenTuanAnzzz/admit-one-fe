@@ -8,7 +8,7 @@ export function SiteFooter() {
         <div className="max-w-sm">
           <p className="font-display text-heading-sm font-extrabold text-brand">admit one</p>
           <p className="mt-2 text-body-sm text-fg-muted">
-            Vé có số ghế cho concert và sự kiện tại Hà Nội. Thanh toán đang chạy ở chế độ thử nghiệm của VNPay và MoMo.
+            Vé điện tử có mã QR cho concert và sự kiện tại Hà Nội. Thanh toán đang chạy ở chế độ thử nghiệm của VNPay và MoMo.
           </p>
         </div>
         {/* Cùng các trang với menu trên header */}
@@ -24,7 +24,7 @@ export function SiteFooter() {
           </ul>
         </nav>
       </div>
-      <p className="mx-auto mt-8 max-w-page text-body-sm text-fg-muted">© 2026 Admit One. Số liệu ghế và đơn hàng trên trang là dữ liệu mẫu.</p>
+      <p className="mx-auto mt-8 max-w-page text-body-sm text-fg-muted">© 2026 Admit One. Số liệu vé và đơn hàng trên trang chủ là dữ liệu mẫu.</p>
     </footer>
   )
 }

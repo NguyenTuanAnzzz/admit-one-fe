@@ -58,8 +58,8 @@ function EventRow({ event, busy, onAction }) {
         <div aria-hidden="true" className="row-span-2 aspect-[3/4] w-14 rounded-card border border-dashed border-line-strong bg-surface-sunken md:row-span-1" />
       )}
       <div className="min-w-0">
-        {/* Tên sự kiện dẫn tới trang sơ đồ ghế, gửi kèm tên để trang đó hiện tiêu đề mà không phải gọi thêm API */}
-        <Link to={`${event.id}/seatmap`} state={{ eventName: event.name }} className="block truncate text-body font-semibold text-title underline-offset-2 hover:underline">
+        {/* Tên sự kiện dẫn tới trang hạng vé, gửi kèm tên để trang đó hiện tiêu đề mà không phải gọi thêm API */}
+        <Link to={`${event.id}/tiers`} state={{ eventName: event.name }} className="block truncate text-body font-semibold text-title underline-offset-2 hover:underline">
           {event.name}
         </Link>
         <p className="truncate text-body-sm text-fg-muted">{event.venue}</p>
@@ -83,8 +83,8 @@ function EventRow({ event, busy, onAction }) {
         <Link to={`${event.id}/edit`} aria-label={`Sửa ${event.name}`} className={rowAction}>
           Sửa
         </Link>
-        <Link to={`${event.id}/seatmap`} state={{ eventName: event.name }} aria-label={`Sơ đồ ghế của ${event.name}`} className={rowAction}>
-          Sơ đồ ghế
+        <Link to={`${event.id}/tiers`} state={{ eventName: event.name }} aria-label={`Hạng vé của ${event.name}`} className={rowAction}>
+          Hạng vé
         </Link>
         {/* Nút đổi trạng thái theo trạng thái hiện tại: Công bố, Mở bán ngay, Mở bán lại, Huỷ sự kiện */}
         {statusActions(event).map((action) => (

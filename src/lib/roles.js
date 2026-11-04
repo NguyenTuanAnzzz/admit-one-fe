@@ -18,14 +18,14 @@ export const DASHBOARD_NAV = [
   {
     path: 'overview',
     label: 'Tổng quan',
-    description: 'Doanh thu, số vé bán, ghế đang giữ, độ dài hàng đợi theo thời gian thực.',
+    description: 'Doanh thu, số vé bán, vé đang giữ, độ dài hàng đợi theo thời gian thực.',
     code: 'A-04',
     roles: [ROLE.ADMIN],
   },
   {
     path: 'events',
     label: 'Sự kiện',
-    description: 'Tạo sự kiện, cấu hình khu và sơ đồ ghế, đặt giá và giờ mở bán.',
+    description: 'Tạo sự kiện, đặt hạng vé, giá, số lượng và giờ mở bán.',
     code: 'A-01 · A-02 · A-03',
     roles: [ROLE.ADMIN],
   },

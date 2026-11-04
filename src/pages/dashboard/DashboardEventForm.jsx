@@ -74,7 +74,7 @@ function PosterField({ poster, onChange, onRemove }) {
 
 /**
  * Dashboard › Sự kiện › Thêm sự kiện (/events/new) hoặc Sửa sự kiện (/events/:id/edit), cùng một form (A-01).
- * Tạo xong sang bước dựng sơ đồ ghế; sửa xong quay về danh sách. Sơ đồ ghế sửa ở trang riêng.
+ * Tạo xong sang bước nhập hạng vé; sửa xong quay về danh sách. Hạng vé sửa ở trang riêng.
  */
 export default function DashboardEventForm() {
   const { id } = useParams()
@@ -101,15 +101,15 @@ export default function DashboardEventForm() {
       <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-heading font-bold text-title">{pageTitle}</h1>
         {isEdit && loaded && (
-          <Link to={`/dashboard/events/${id}/seatmap`} state={{ eventName: values.name }} className={smallButton}>
-            Sơ đồ ghế →
+          <Link to={`/dashboard/events/${id}/tiers`} state={{ eventName: values.name }} className={smallButton}>
+            Hạng vé →
           </Link>
         )}
       </div>
       <p className="mt-2 text-body-sm text-fg-muted">
         {isEdit
-          ? 'Sửa thông tin hiển thị cho khách. Trạng thái và sơ đồ ghế đổi ở chỗ riêng.'
-          : 'Sự kiện mới là bản nháp, khách chưa thấy cho tới khi bạn công bố. Tạo xong sẽ sang bước dựng sơ đồ ghế.'}
+          ? 'Sửa thông tin hiển thị cho khách. Trạng thái và hạng vé đổi ở chỗ riêng.'
+          : 'Sự kiện mới là bản nháp, khách chưa thấy cho tới khi bạn công bố. Tạo xong sẽ sang bước nhập hạng vé.'}
       </p>
 
       {loadError && (

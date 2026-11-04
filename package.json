@@ -11,10 +11,8 @@
   },
   "dependencies": {
     "framer-motion": "^14.8.0",
-    "konva": "10.9.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "react-konva": "19.3.2",
     "react-router-dom": "^7.18.5",
     "viewerjs": "1.15.2"
   },

@@ -4,7 +4,6 @@ import { LazyMotion, MotionConfig, domAnimation } from 'framer-motion'
 import { SiteHeader } from '../components/SiteHeader'
 import { Hero } from '../components/Hero'
 import { EventList } from '../components/EventList'
-import { ZoneMap } from '../components/ZoneMap'
 import { BuyingFlow } from '../components/BuyingFlow'
 import { Faq } from '../components/Faq'
 import { SiteFooter } from '../components/SiteFooter'
@@ -17,7 +16,7 @@ export default function HomePage() {
   // Từ khoá lọc danh sách mẫu trên trang chủ (EventList). Tìm ở header thì sang trang /events có dữ liệu thật
   const [query, setQuery] = useState('')
 
-  // Bấm "Giá theo khu", "Hỏi đáp"... ở trang khác: về trang chủ với #mục, cuộn tới mục đó sau khi trang hiện ra
+  // Link tới #mục từ trang khác: về trang chủ với #mục, cuộn tới mục đó sau khi trang hiện ra
   useEffect(() => {
     const target = location.hash.slice(1)
     if (target) document.getElementById(target)?.scrollIntoView({ block: 'start' })
@@ -41,7 +40,6 @@ export default function HomePage() {
           <main id="main-content">
             <Hero />
             <EventList query={query} onClearQuery={() => setQuery('')} />
-            <ZoneMap user={user} onLogin={openLogin} />
             <BuyingFlow />
             <Faq />
           </main>

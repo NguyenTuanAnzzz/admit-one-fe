@@ -17,7 +17,7 @@ export default function HowToBuyPage() {
       <div className="mx-auto max-w-page px-gutter pt-section-sm pb-6">
         <h1 className="font-display text-heading font-bold text-title md:text-heading-lg">Cách mua vé</h1>
         <p className="mt-2 max-w-2xl text-body text-fg-muted">
-          Chọn ghế, giữ ghế 10 phút, thanh toán qua VNPay hoặc MoMo rồi nhận vé có mã QR qua email. Mỗi tài khoản mua tối đa 4 vé cho một sự kiện.
+          Chọn hạng vé và số lượng, giữ vé 10 phút, thanh toán qua VNPay hoặc MoMo rồi nhận vé có mã QR qua email. Mỗi tài khoản mua tối đa 4 vé cho một sự kiện.
         </p>
       </div>
       <BuyingFlow />

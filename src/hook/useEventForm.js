@@ -60,7 +60,7 @@ function focusFirstError(errors) {
 
 /**
  * Logic form sự kiện ở dashboard, dùng cho cả tạo (eventId rỗng) và sửa (có eventId), cùng kiểu useRegister.
- * Sửa: tải GET /admin/events/{id} để điền sẵn form và poster, lưu bằng PUT. Tạo: POST rồi sang bước dựng sơ đồ ghế.
+ * Sửa: tải GET /admin/events/{id} để điền sẵn form và poster, lưu bằng PUT. Tạo: POST rồi sang bước nhập hạng vé.
  * Ảnh poster tải lên ngay khi chọn file (POST /admin/uploads/poster), trong lúc admin điền tiếp các ô khác.
  * poster.status: idle (chưa chọn) / uploading / done / error.
  */
@@ -168,8 +168,8 @@ export default function useEventForm(eventId) {
         navigate('/dashboard/events', { state: { saved: data.name } })
       } else {
         const data = await createEvent(fetchWithAuth, payload)
-        // Tạo xong sang thẳng bước dựng sơ đồ ghế của sự kiện vừa tạo
-        navigate(`/dashboard/events/${data.id}/seatmap`, { state: { eventName: data.name, created: true } })
+        // Tạo xong sang thẳng bước nhập hạng vé của sự kiện vừa tạo
+        navigate(`/dashboard/events/${data.id}/tiers`, { state: { eventName: data.name, created: true } })
       }
     } catch (err) {
       setError({ form: err.message })

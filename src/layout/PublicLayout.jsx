@@ -30,7 +30,7 @@ export default function PublicLayout() {
             onSearch={(q) => navigate(q ? `/events?q=${encodeURIComponent(q)}` : '/events')}
           />
           <div className="flex-1">
-            {/* Trang tải khi cần (React.lazy, ví dụ chi tiết sự kiện có sơ đồ Konva) hiện dòng chờ này trong lúc tải */}
+            {/* Trang tải khi cần (React.lazy, ví dụ trang chi tiết sự kiện) hiện dòng chờ này trong lúc tải */}
             <Suspense fallback={<p role="status" className="mx-auto max-w-page px-gutter py-section-sm text-body-sm text-fg-muted">Đang tải trang...</p>}>
               <Outlet />
             </Suspense>

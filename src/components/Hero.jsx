@@ -44,17 +44,17 @@ export function Hero() {
             <div>
               <dt className="text-caption text-fg-muted">Còn trống</dt>
               <dd className="mt-1 font-display text-subheading font-semibold text-title tabular-nums">
-                {formatCount(ev.stats.available)} / {formatCount(ev.stats.total)} ghế
+                {formatCount(ev.stats.available)} / {formatCount(ev.stats.total)} vé
               </dd>
               <dd className="text-body-sm text-fg-muted">Tối đa 4 vé mỗi tài khoản</dd>
             </div>
           </m.dl>
 
           <m.div variants={fadeUp} className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
-            <PrimaryButton as="a" href="#pricing" className="min-h-12 px-7 text-body">
+            <PrimaryButton as="a" href="/events" className="min-h-12 px-7 text-body">
               Mua vé · từ {formatMoney(ev.priceFrom)}
             </PrimaryButton>
-            <p className="text-body-sm text-fg-muted">Ghế được giữ 10 phút để bạn thanh toán.</p>
+            <p className="text-body-sm text-fg-muted">Vé được giữ 10 phút để bạn thanh toán.</p>
           </m.div>
         </m.div>
 

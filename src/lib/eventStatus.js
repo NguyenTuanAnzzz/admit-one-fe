@@ -47,8 +47,8 @@ export function statusActions(event, now = Date.now()) {
           target: saleLater ? EVENT_STATUS.UPCOMING : EVENT_STATUS.ON_SALE,
           tone: 'primary',
           confirm: saleLater
-            ? `Công bố "${event.name}"? Khách sẽ thấy sự kiện ở trạng thái Sắp mở bán. Sau khi công bố không sửa được sơ đồ ghế nữa.`
-            : `Công bố và mở bán "${event.name}" ngay? Giờ mở bán đã qua nên khách giữ ghế được luôn. Sau khi công bố không sửa được sơ đồ ghế nữa.`,
+            ? `Công bố "${event.name}"? Khách sẽ thấy sự kiện ở trạng thái Sắp mở bán. Sau khi công bố không sửa được hạng vé nữa.`
+            : `Công bố và mở bán "${event.name}" ngay? Giờ mở bán đã qua nên khách mua được luôn. Sau khi công bố không sửa được hạng vé nữa.`,
         },
       ]
     }

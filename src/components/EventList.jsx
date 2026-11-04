@@ -91,7 +91,7 @@ export function EventList({ query, onClearQuery }) {
           {state.status === 'error' && (
             <div className="rounded-card border border-card-line bg-card px-6 py-10 text-center">
               <p className="text-subheading font-semibold text-title">{state.error.message}</p>
-              <p className="mt-2 text-body text-fg-muted">Kiểm tra kết nối mạng rồi thử lại. Ghế bạn đang giữ (nếu có) không bị ảnh hưởng.</p>
+              <p className="mt-2 text-body text-fg-muted">Kiểm tra kết nối mạng rồi thử lại. Vé bạn đang giữ (nếu có) không bị ảnh hưởng.</p>
               <GhostButton type="button" onClick={retry} className="mt-6">
                 Tải lại danh sách
               </GhostButton>
@@ -151,7 +151,7 @@ function EventCard({ ref, index, event: e, now, open, onToggle }) {
         {e.poster ? (
           <img src={e.poster} alt="" width="1024" height="1024" loading="lazy" className="aspect-[4/3] w-full object-cover" />
         ) : (
-          // Sự kiện chưa có poster: một cuống vé in ngày diễn, cùng mô-típ vé giấy với logo và phiếu giữ ghế
+          // Sự kiện chưa có poster: một cuống vé in ngày diễn, cùng mô-típ vé giấy với logo và phiếu giữ vé
           <div aria-hidden="true" className="flex aspect-[4/3] w-full items-center justify-center bg-surface-sunken">
             <div className={`relative flex w-3/4 max-w-56 rounded-input border border-line bg-ticket ${soldOut ? 'text-fg-muted' : 'text-title'}`}>
               <span className="absolute top-1/2 -left-2 size-4 -translate-y-1/2 rounded-full bg-surface-sunken shadow-notch-left" />
@@ -215,7 +215,7 @@ function EventCard({ ref, index, event: e, now, open, onToggle }) {
               <div>
                 <dt className="text-fg-muted">Giá vé</dt>
                 <dd>
-                  {formatMoney(e.priceFrom)} đến {formatMoney(e.priceTo)}, {formatCount(e.seats)} ghế
+                  {formatMoney(e.priceFrom)} đến {formatMoney(e.priceTo)}, {formatCount(e.seats)} vé
                 </dd>
               </div>
               <div>
@@ -226,8 +226,8 @@ function EventCard({ ref, index, event: e, now, open, onToggle }) {
               </div>
             </dl>
             {e.featured ? (
-              <a href="#pricing" className="mt-3 inline-flex min-h-11 items-center text-body-sm font-semibold text-title underline underline-offset-4 hover:text-fg-muted">
-                Xem sơ đồ khu và giá vé
+              <a href="/events" className="mt-3 inline-flex min-h-11 items-center text-body-sm font-semibold text-title underline underline-offset-4 hover:text-fg-muted">
+                Xem giá vé
               </a>
             ) : (
               <p className="mt-3 text-body-sm text-fg-muted">Trang chi tiết của sự kiện này chưa được dựng trong bản demo.</p>

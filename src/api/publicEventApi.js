@@ -46,12 +46,7 @@ export function getPublicEvent(id) {
   return getJson(`${API_URL}/events/${id}`, 'Không tải được sự kiện.')
 }
 
-// Sơ đồ cho khách: hạng vé, khu kèm số ghế còn trống, vật thể (không có ảnh nền)
-export function getPublicSeatMap(id) {
-  return getJson(`${API_URL}/events/${id}/seatmap`, 'Không tải được sơ đồ ghế.')
-}
-
-// Ghế của một khu kèm trạng thái (AVAILABLE, HELD, SOLD, BLOCKED)
-export function getPublicZoneSeats(id, zoneId) {
-  return getJson(`${API_URL}/events/${id}/zones/${zoneId}/seats`, 'Không tải được ghế của khu.')
+// Hạng vé cho khách: [{ id, name, price, color, available }], available là số vé còn bán được
+export function getPublicTiers(id) {
+  return getJson(`${API_URL}/events/${id}/tiers`, 'Không tải được giá vé.')
 }
