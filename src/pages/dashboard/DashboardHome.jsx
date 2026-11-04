@@ -17,7 +17,7 @@ export default function DashboardHome() {
   }, [])
 
   return (
-    <div className="max-w-4xl">
+    <div>
       <h1 className="font-display text-heading font-bold text-title">Chào {user.name}</h1>
       <p className="mt-2 text-body-sm text-fg-muted">
         {user.role === ROLE.ADMIN
@@ -25,7 +25,7 @@ export default function DashboardHome() {
           : 'Soát vé tại cửa cho các sự kiện bạn được gán.'}
       </p>
 
-      <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+      <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {items.map((item) => (
           <li key={item.path}>
             <Link

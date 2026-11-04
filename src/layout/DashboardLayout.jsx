@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { LazyMotion, MotionConfig, domAnimation } from 'framer-motion'
 import { HeaderLogo } from '../components/HeaderLogo'
@@ -75,7 +76,13 @@ export default function DashboardLayout() {
               </nav>
             </aside>
             <main id="main-content" className="min-w-0 flex-1 px-gutter py-8 md:px-10">
-              <Outlet />
+              {/* Căn giữa vùng nội dung, mọi trang con dùng chung một độ rộng để tiêu đề các trang thẳng hàng */}
+              <div className="mx-auto w-full max-w-6xl">
+                {/* Trang tải khi cần (React.lazy, ví dụ trình dựng sơ đồ) hiện dòng chờ này trong lúc tải */}
+                <Suspense fallback={<p role="status" className="text-body-sm text-fg-muted">Đang tải trang...</p>}>
+                  <Outlet />
+                </Suspense>
+              </div>
             </main>
           </div>
         </div>

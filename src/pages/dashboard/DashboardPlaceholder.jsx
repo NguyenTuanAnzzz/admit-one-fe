@@ -11,7 +11,7 @@ export default function DashboardPlaceholder({ item }) {
   }, [item.label])
 
   return (
-    <div className="max-w-4xl">
+    <div>
       <h1 className="font-display text-heading font-bold text-title">{item.label}</h1>
       <p className="mt-2 text-body-sm text-fg-muted">{item.description}</p>
 
