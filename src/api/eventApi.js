@@ -2,8 +2,10 @@
 const API_URL = import.meta.env.VITE_API_URL
 
 /**
- * Một trang danh sách sự kiện cho admin, có cả bản nháp. Trả EventPageResponse: { items, page, size, totalItems, totalPages, statusCounts }.
- * params: { status, q, startsFrom, startsTo, saleFrom, saleTo, page, size, sort }, tham số rỗng thì không gửi. page bắt đầu từ 0, ngày giờ là ISO.
+ * Một trang danh sách sự kiện cho admin, có cả bản nháp: GET /admin/events (EventController.getAllEventsForAdmin).
+ * params: { keyword, eventDate, saleDate, page, size }. eventDate, saleDate dạng "2026-12-20", page bắt đầu từ 0.
+ * Tham số rỗng thì không gửi. Backend xếp sự kiện mới tạo lên đầu.
+ * Backend trả Page<EventResponse> của Spring, đổi về { items, page, size, totalItems, totalPages } cho trang danh sách.
  */
 export async function getAdminEvents(fetchWithAuth, params = {}) {
   const query = new URLSearchParams()
@@ -20,7 +22,22 @@ export async function getAdminEvents(fetchWithAuth, params = {}) {
 
   const data = await res.json().catch(() => null)
   if (!res.ok) throw new Error(data?.message ?? 'Không tải được danh sách sự kiện.')
-  return data
+  return fromSpringPage(data)
+}
+
+/**
+ * Spring trả Page theo một trong hai kiểu, tuỳ cấu hình:
+ * { content, number, size, totalElements, totalPages } hoặc { content, page: { number, size, totalElements, totalPages } }.
+ */
+function fromSpringPage(data) {
+  const meta = data?.page ?? data ?? {}
+  return {
+    items: data?.content ?? [],
+    page: meta.number ?? 0,
+    size: meta.size ?? 0,
+    totalItems: meta.totalElements ?? 0,
+    totalPages: meta.totalPages ?? 0,
+  }
 }
 
 // Chi tiết một sự kiện (kể cả bản nháp), để điền sẵn form sửa
