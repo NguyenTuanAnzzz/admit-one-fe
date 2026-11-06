@@ -8,6 +8,29 @@ const EMPTY = { name: '', venue: '', address: '', googleMapsUrl: '', description
 
 const FIELD_ORDER = ['name', 'venue', 'address', 'googleMapsUrl', 'startsAt', 'saleOpensAt']
 
+// Cùng giới hạn với TicketRequest ở backend (tên tối đa 100 ký tự, giá không âm, số lượng lớn hơn 0)
+export const MAX_TICKET_TYPES = 10
+
+let ticketCounter = 0
+// Khoá tạm cho mỗi loại vé trên form, chỉ dùng làm key của React, không gửi backend
+const newTicket = () => ({ key: `ve-${ticketCounter++}`, name: '', description: '', price: '', quantity: '' })
+
+/** Lỗi từng loại vé: { [key]: { name, price, quantity } } */
+function validateTickets(tickets) {
+  const rows = {}
+  tickets.forEach((t) => {
+    const e = {}
+    if (!t.name.trim()) e.name = 'Nhập tên loại vé.'
+    else if (t.name.trim().length > 100) e.name = 'Tối đa 100 ký tự.'
+    if (t.price === '') e.price = 'Nhập giá vé.'
+    else if (Number(t.price) < 0) e.price = 'Giá vé không được âm.'
+    if (t.quantity === '') e.quantity = 'Nhập số lượng.'
+    else if (!Number.isInteger(Number(t.quantity)) || Number(t.quantity) <= 0) e.quantity = 'Số lượng là số nguyên lớn hơn 0.'
+    if (Object.keys(e).length) rows[t.key] = e
+  })
+  return rows
+}
+
 // Trùng @Pattern của googleMapsUrl trong EventRequest ở backend
 const GOOGLE_MAPS_URL = /^https:\/\/(maps\.app\.goo\.gl\/|goo\.gl\/maps\/|(www\.)?google\.com(\.[a-z]{2})?\/maps|maps\.google\.com(\.[a-z]{2})?\/).*$/
 
@@ -60,7 +83,8 @@ function focusFirstError(errors) {
 
 /**
  * Logic form sự kiện ở dashboard, dùng cho cả tạo (eventId rỗng) và sửa (có eventId), cùng kiểu useRegister.
- * Sửa: tải GET /admin/events/{id} để điền sẵn form và poster, lưu bằng PUT. Tạo: POST rồi sang bước nhập hạng vé.
+ * Sửa: tải GET /admin/events/{id} để điền sẵn form và poster, lưu bằng PUT.
+ * Tạo: POST /admin/events gửi kèm danh sách loại vé (tickets), backend bắt buộc có ít nhất một loại.
  * Ảnh poster tải lên ngay khi chọn file (POST /admin/uploads/poster), trong lúc admin điền tiếp các ô khác.
  * poster.status: idle (chưa chọn) / uploading / done / error.
  */
@@ -70,6 +94,9 @@ export default function useEventForm(eventId) {
   const [values, setValues] = useState(EMPTY)
   const [error, setError] = useState({})
   const [loading, setLoading] = useState(false)
+  // Loại vé chỉ nhập lúc tạo: backend chưa có API sửa vé
+  const [tickets, setTickets] = useState(() => [newTicket()])
+  const [ticketErrors, setTicketErrors] = useState({})
   const [poster, setPoster] = useState({ status: 'idle', url: null, previewUrl: null, error: null })
   // Sửa: chờ tải xong sự kiện mới hiện form, để admin không gõ vào form rỗng rồi bị ghi đè
   const [loaded, setLoaded] = useState(!eventId)
@@ -135,6 +162,25 @@ export default function useEventForm(eventId) {
     }
   }
 
+  function addTicket() {
+    setTickets((list) => (list.length >= MAX_TICKET_TYPES ? list : [...list, newTicket()]))
+  }
+
+  function updateTicket(key, patch) {
+    setTickets((list) => list.map((t) => (t.key === key ? { ...t, ...patch } : t)))
+    // Sửa ô nào thì bỏ lỗi của ô đó
+    setTicketErrors((errs) => {
+      if (!errs[key]) return errs
+      const row = { ...errs[key] }
+      Object.keys(patch).forEach((field) => delete row[field])
+      return { ...errs, [key]: row }
+    })
+  }
+
+  function removeTicket(key) {
+    setTickets((list) => (list.length > 1 ? list.filter((t) => t.key !== key) : list))
+  }
+
   function handleRemovePoster() {
     setPreview(null)
     setPoster({ status: 'idle', url: null, previewUrl: null, error: null })
@@ -143,9 +189,17 @@ export default function useEventForm(eventId) {
   async function handleSubmit(e) {
     e.preventDefault()
     const next = validate(values)
+    const nextTickets = eventId ? {} : validateTickets(tickets)
     setError(next)
+    setTicketErrors(nextTickets)
     if (Object.keys(next).length) {
       focusFirstError(next)
+      return
+    }
+    const firstBadTicket = tickets.find((t) => nextTickets[t.key])
+    if (firstBadTicket) {
+      const field = ['name', 'price', 'quantity'].find((f) => nextTickets[firstBadTicket.key][f])
+      document.getElementById(`${firstBadTicket.key}-${field}`)?.focus()
       return
     }
 
@@ -167,9 +221,17 @@ export default function useEventForm(eventId) {
         // Danh sách đọc state này để báo "Đã lưu ..." ở đầu trang
         navigate('/dashboard/events', { state: { saved: data.name } })
       } else {
-        const data = await createEvent(fetchWithAuth, payload)
-        // Tạo xong sang thẳng bước nhập hạng vé của sự kiện vừa tạo
-        navigate(`/dashboard/events/${data.id}/tiers`, { state: { eventName: data.name, created: true } })
+        const data = await createEvent(fetchWithAuth, {
+          ...payload,
+          tickets: tickets.map((t) => ({
+            name: t.name.trim(),
+            description: t.description.trim() || null,
+            price: Number(t.price),
+            quantity: Number(t.quantity),
+          })),
+        })
+        // Danh sách đọc state này để báo "Đã tạo ..." ở đầu trang
+        navigate('/dashboard/events', { state: { saved: data.name, created: true } })
       }
     } catch (err) {
       setError({ form: err.message })
@@ -177,5 +239,21 @@ export default function useEventForm(eventId) {
     }
   }
 
-  return { values, error, loading, poster, loaded, loadError, handleChange, handlePosterChange, handleRemovePoster, handleSubmit }
+  return {
+    values,
+    error,
+    loading,
+    poster,
+    loaded,
+    loadError,
+    handleChange,
+    handlePosterChange,
+    handleRemovePoster,
+    handleSubmit,
+    tickets,
+    ticketErrors,
+    addTicket,
+    updateTicket,
+    removeTicket,
+  }
 }

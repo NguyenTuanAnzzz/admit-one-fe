@@ -182,6 +182,7 @@ export default function DashboardEvents() {
 
   // Từ trang sửa quay về kèm tên sự kiện vừa lưu. Giữ vào state rồi xoá khỏi history để F5 không báo lại
   const [savedName] = useState(() => location.state?.saved ?? null)
+  const [justCreated] = useState(() => Boolean(location.state?.created))
   useEffect(() => {
     if (location.state?.saved) navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
   }, [location, navigate])
@@ -224,7 +225,9 @@ export default function DashboardEvents() {
 
       {savedName && (
         <p role="status" className="mt-6 rounded-input bg-success-subtle px-4 py-3 text-body-sm text-fg">
-          Đã lưu thay đổi của <span className="font-semibold">{savedName}</span>.
+          {justCreated ? 'Đã tạo sự kiện ' : 'Đã lưu thay đổi của '}
+          <span className="font-semibold">{savedName}</span>
+          {justCreated ? ' ở trạng thái bản nháp.' : '.'}
         </p>
       )}
 

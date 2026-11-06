@@ -5,7 +5,8 @@ import { PrimaryButton } from '../../components/Button'
 import { PosterViewer } from '../../components/PosterViewer'
 import { Spinner } from '../../components/Spinner'
 import { TextField } from '../../components/TextField'
-import useEventForm from '../../hook/useEventForm'
+import useEventForm, { MAX_TICKET_TYPES } from '../../hook/useEventForm'
+import { formatMoney } from '../../lib/format'
 
 const card = 'rounded-card border border-card-line bg-surface p-card'
 const smallButton =
@@ -72,14 +73,109 @@ function PosterField({ poster, onChange, onRemove }) {
   )
 }
 
+const input = (invalid) =>
+  `block min-h-11 w-full rounded-input bg-surface px-3 text-body-sm text-fg outline-none placeholder:text-fg-placeholder focus-visible:ring-2 focus-visible:ring-focus ${
+    invalid ? 'ring-2 ring-danger' : 'ring-1 ring-input-line'
+  }`
+
+/** Một ô nhập của loại vé, có nhãn và dòng lỗi gắn với ô qua aria-describedby */
+function TicketInput({ id, label, error, hint, className = '', ...props }) {
+  return (
+    <div className={className}>
+      <label htmlFor={id} className="text-caption font-semibold text-fg-muted">
+        {label}
+      </label>
+      <input id={id} className={`${input(error)} mt-1`} aria-invalid={Boolean(error)} aria-describedby={error ? `${id}-loi` : undefined} {...props} />
+      {error ? (
+        <p id={`${id}-loi`} className="mt-1 text-caption text-danger">
+          {error}
+        </p>
+      ) : (
+        hint && <p className="mt-1 text-caption text-fg-muted">{hint}</p>
+      )}
+    </div>
+  )
+}
+
+/** Loại vé của sự kiện mới: tên, giá, số lượng, mô tả. Backend bắt buộc ít nhất một loại */
+function TicketSection({ tickets, errors, onAdd, onUpdate, onRemove }) {
+  const totalQuantity = tickets.reduce((n, t) => n + (Number(t.quantity) || 0), 0)
+  return (
+    <section aria-labelledby="loai-ve" className="mt-8 border-t border-line pt-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h2 id="loai-ve" className="text-subheading font-bold text-title">
+            Loại vé
+          </h2>
+          <p className="mt-1 text-body-sm text-fg-muted">Ít nhất một loại. Khách chọn loại vé và số lượng, không chọn ghế.</p>
+        </div>
+        <p className="text-body-sm text-fg">
+          {tickets.length} loại · <span className="font-semibold">{totalQuantity.toLocaleString('vi-VN')}</span> vé
+        </p>
+      </div>
+
+      <ul className="mt-4 space-y-3">
+        {tickets.map((t, i) => {
+          const e = errors[t.key] ?? {}
+          const label = t.name.trim() || `loại vé ${i + 1}`
+          return (
+            <li key={t.key} className="rounded-card border border-line bg-surface-sunken/40 p-4">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.8fr)]">
+                <TicketInput id={`${t.key}-name`} label="Tên loại vé" placeholder="VIP, Hạng A, Vé đứng..." maxLength={100} value={t.name} error={e.name} onChange={(ev) => onUpdate(t.key, { name: ev.target.value })} />
+                <TicketInput
+                  id={`${t.key}-price`}
+                  label="Giá (đồng)"
+                  type="number"
+                  inputMode="numeric"
+                  min={0}
+                  step={1000}
+                  placeholder="1500000"
+                  value={t.price}
+                  error={e.price}
+                  hint={t.price !== '' && Number(t.price) >= 0 ? formatMoney(Number(t.price)) : null}
+                  onChange={(ev) => onUpdate(t.key, { price: ev.target.value })}
+                />
+                <TicketInput id={`${t.key}-quantity`} label="Số lượng" type="number" inputMode="numeric" min={1} step={1} placeholder="500" value={t.quantity} error={e.quantity} onChange={(ev) => onUpdate(t.key, { quantity: ev.target.value })} />
+              </div>
+              <div className="mt-3 flex flex-wrap items-end gap-3">
+                <TicketInput
+                  id={`${t.key}-description`}
+                  label="Mô tả (không bắt buộc)"
+                  className="min-w-0 flex-1 basis-60"
+                  placeholder="Khu đứng sát sân khấu, tặng kèm lightstick..."
+                  value={t.description}
+                  onChange={(ev) => onUpdate(t.key, { description: ev.target.value })}
+                />
+                {tickets.length > 1 && (
+                  <button type="button" onClick={() => onRemove(t.key)} aria-label={`Xoá ${label}`} className="inline-flex min-h-11 items-center rounded-pill px-3 text-body-sm font-semibold text-danger hover:bg-danger-subtle">
+                    Xoá
+                  </button>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <button type="button" onClick={onAdd} disabled={tickets.length >= MAX_TICKET_TYPES} className={`${smallButton} disabled:cursor-not-allowed disabled:opacity-50`}>
+          + Thêm loại vé
+        </button>
+        {tickets.length >= MAX_TICKET_TYPES && <span className="text-caption text-fg-muted">Tối đa {MAX_TICKET_TYPES} loại vé.</span>}
+      </div>
+    </section>
+  )
+}
+
 /**
  * Dashboard › Sự kiện › Thêm sự kiện (/events/new) hoặc Sửa sự kiện (/events/:id/edit), cùng một form (A-01).
- * Tạo xong sang bước nhập hạng vé; sửa xong quay về danh sách. Hạng vé sửa ở trang riêng.
+ * Tạo: nhập luôn các loại vé trong cùng form, gửi một lần. Xong quay về danh sách.
  */
 export default function DashboardEventForm() {
   const { id } = useParams()
   const isEdit = Boolean(id)
-  const { values, error, loading, poster, loaded, loadError, handleChange, handlePosterChange, handleRemovePoster, handleSubmit } = useEventForm(id)
+  const form = useEventForm(id)
+  const { values, error, loading, poster, loaded, loadError, handleChange, handlePosterChange, handleRemovePoster, handleSubmit } = form
   const pageTitle = isEdit ? 'Sửa sự kiện' : 'Thêm sự kiện'
 
   useEffect(() => {
@@ -100,16 +196,11 @@ export default function DashboardEventForm() {
       </Link>
       <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-heading font-bold text-title">{pageTitle}</h1>
-        {isEdit && loaded && (
-          <Link to={`/dashboard/events/${id}/tiers`} state={{ eventName: values.name }} className={smallButton}>
-            Hạng vé →
-          </Link>
-        )}
       </div>
       <p className="mt-2 text-body-sm text-fg-muted">
         {isEdit
-          ? 'Sửa thông tin hiển thị cho khách. Trạng thái và hạng vé đổi ở chỗ riêng.'
-          : 'Sự kiện mới là bản nháp, khách chưa thấy cho tới khi bạn công bố. Tạo xong sẽ sang bước nhập hạng vé.'}
+          ? 'Sửa thông tin hiển thị cho khách. Trạng thái đổi ở danh sách sự kiện.'
+          : 'Sự kiện mới là bản nháp, khách chưa thấy cho tới khi bạn công bố. Nhập thông tin và các loại vé rồi bấm Tạo.'}
       </p>
 
       {loadError && (
@@ -162,6 +253,8 @@ export default function DashboardEventForm() {
             </div>
           </div>
         </div>
+
+        {!isEdit && <TicketSection tickets={form.tickets} errors={form.ticketErrors} onAdd={form.addTicket} onUpdate={form.updateTicket} onRemove={form.removeTicket} />}
 
         <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
           <PrimaryButton type="submit" disabled={loading || uploading}>
