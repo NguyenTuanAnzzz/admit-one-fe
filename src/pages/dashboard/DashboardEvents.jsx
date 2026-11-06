@@ -38,7 +38,10 @@ function EventRow({ event, busy, onPublish }) {
         <div aria-hidden="true" className="row-span-2 aspect-[3/4] w-14 rounded-card border border-dashed border-line-strong bg-surface-sunken xl:row-span-1" />
       )}
       <div className="min-w-0">
-        <p className="truncate text-body font-semibold text-title">{event.name}</p>
+        {/* Tên dẫn tới trang chi tiết: thông tin, poster, các loại vé và số đã bán */}
+        <Link to={event.id} className="block truncate text-body font-semibold text-title underline-offset-2 hover:underline">
+          {event.name}
+        </Link>
         <p className="truncate text-body-sm text-fg-muted">
           {event.venue}
           {event.address ? ` · ${event.address}` : ''}

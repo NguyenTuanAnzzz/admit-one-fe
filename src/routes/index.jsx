@@ -20,6 +20,7 @@ import ProtectRoute from './ProtectRoute'
 // Trang quản lý chỉ admin dùng: tải khi mở, khách không phải tải. Suspense chờ tải nằm ở DashboardLayout
 const DashboardEvents = lazy(() => import('../pages/dashboard/DashboardEvents'))
 const DashboardEventForm = lazy(() => import('../pages/dashboard/DashboardEventForm'))
+const DashboardEventDetail = lazy(() => import('../pages/dashboard/DashboardEventDetail'))
 const DashboardEventTiers = lazy(() => import('../pages/dashboard/DashboardEventTiers'))
 const DashboardStaff = lazy(() => import('../pages/dashboard/DashboardStaff'))
 const DashboardStaffForm = lazy(() => import('../pages/dashboard/DashboardStaffForm'))
@@ -31,6 +32,7 @@ const DASHBOARD_PAGES = {
   events: [
     ['', DashboardEvents],
     ['new', DashboardEventForm],
+    [':id', DashboardEventDetail],
     [':id/edit', DashboardEventForm],
     [':id/tiers', DashboardEventTiers],
   ],
