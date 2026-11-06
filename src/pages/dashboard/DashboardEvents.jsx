@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { PosterViewer } from '../../components/PosterViewer'
+import { publishEvent } from '../../api/eventApi'
+import { useAuth } from '../../context/AuthContext'
 import useAdminEvents from '../../hook/useAdminEvents'
-import { EVENT_STATUS_LABEL, EVENT_STATUS_STYLE } from '../../lib/eventStatus'
+import { EVENT_STATUS, EVENT_STATUS_LABEL, EVENT_STATUS_STYLE } from '../../lib/eventStatus'
 import { hanoiParts } from '../../lib/format'
 import { pageWindow } from '../../lib/pagination'
 
@@ -17,21 +19,23 @@ const pageButton = (active) =>
 
 const PAGE_SIZE = 10
 
-// Cột của hàng tiêu đề và từng dòng phải giống nhau để thẳng hàng: poster, tên, giờ diễn, mở bán, trạng thái
-const ROW_COLUMNS = 'md:grid-cols-[56px_minmax(0,1fr)_150px_150px_110px]'
+// Cột của hàng tiêu đề và từng dòng phải giống nhau để thẳng hàng: poster, tên, giờ diễn, mở bán, trạng thái, nút
+const ROW_COLUMNS = 'xl:grid-cols-[56px_minmax(0,1fr)_130px_130px_100px_110px]'
+const rowPrimary =
+  'inline-flex min-h-11 items-center gap-2 rounded-pill border-[1.5px] border-button-primary bg-button-primary px-4 text-body-sm font-semibold text-button-primary-fg hover:border-button-primary-hover hover:bg-button-primary-hover disabled:cursor-not-allowed disabled:opacity-60'
 
 const formatHanoi = (iso) => {
   const p = hanoiParts(iso)
   return `${p.time} · ${p.day}/${p.month}/${p.year}`
 }
 
-function EventRow({ event }) {
+function EventRow({ event, busy, onPublish }) {
   return (
-    <li className={`grid grid-cols-[56px_minmax(0,1fr)] gap-x-4 gap-y-2 border-t border-line py-4 first:border-t-0 md:items-center ${ROW_COLUMNS}`}>
+    <li className={`grid grid-cols-[56px_minmax(0,1fr)] gap-x-4 gap-y-2 border-t border-line py-4 first:border-t-0 xl:items-center ${ROW_COLUMNS}`}>
       {event.posterUrl ? (
-        <PosterViewer src={event.posterUrl} alt={`Poster ${event.name}`} className="row-span-2 aspect-[3/4] w-14 md:row-span-1" />
+        <PosterViewer src={event.posterUrl} alt={`Poster ${event.name}`} className="row-span-2 aspect-[3/4] w-14 xl:row-span-1" />
       ) : (
-        <div aria-hidden="true" className="row-span-2 aspect-[3/4] w-14 rounded-card border border-dashed border-line-strong bg-surface-sunken md:row-span-1" />
+        <div aria-hidden="true" className="row-span-2 aspect-[3/4] w-14 rounded-card border border-dashed border-line-strong bg-surface-sunken xl:row-span-1" />
       )}
       <div className="min-w-0">
         <p className="truncate text-body font-semibold text-title">{event.name}</p>
@@ -40,19 +44,27 @@ function EventRow({ event }) {
           {event.address ? ` · ${event.address}` : ''}
         </p>
       </div>
-      {/* Dưới md: giờ và trạng thái xuống dòng dưới tên, có nhãn chữ vì không còn hàng tiêu đề cột */}
-      <div className="col-start-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-body-sm md:contents">
+      {/* Dưới xl: giờ và trạng thái xuống dòng dưới tên, có nhãn chữ vì không còn hàng tiêu đề cột */}
+      <div className="col-start-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-body-sm xl:contents">
         <p className="text-fg">
-          <span className="text-fg-muted md:hidden">Diễn: </span>
+          <span className="text-fg-muted xl:hidden">Diễn: </span>
           {formatHanoi(event.startsAt)}
         </p>
         <p className="text-fg">
-          <span className="text-fg-muted md:hidden">Mở bán: </span>
+          <span className="text-fg-muted xl:hidden">Mở bán: </span>
           {formatHanoi(event.saleOpensAt)}
         </p>
         <span className={`inline-flex w-fit items-center rounded-badge px-2.5 py-1 text-caption font-semibold ${EVENT_STATUS_STYLE[event.status] ?? ''}`}>
           {EVENT_STATUS_LABEL[event.status] ?? event.status}
         </span>
+      </div>
+      <div className="col-start-2 xl:col-start-auto xl:flex xl:justify-end">
+        {/* Chỉ bản nháp mới công bố được. aria-label có tên sự kiện để trình đọc màn hình không nghe "Công bố" lặp lại ở mọi dòng */}
+        {event.status === EVENT_STATUS.DRAFT && (
+          <button type="button" disabled={busy} onClick={() => onPublish(event)} aria-label={`Công bố ${event.name}`} className={rowPrimary}>
+            {busy ? 'Đang công bố...' : 'Công bố'}
+          </button>
+        )}
       </div>
     </li>
   )
@@ -76,6 +88,26 @@ export default function DashboardEvents() {
 
   const params = useMemo(() => ({ keyword: q, eventDate: show, saleDate: sale, page: page - 1, size: PAGE_SIZE }), [q, show, sale, page])
   const { data, error, loading, reload } = useAdminEvents(params)
+  const { fetchWithAuth } = useAuth()
+  // Sự kiện đang công bố (khoá nút của dòng đó) và thông báo kết quả ở đầu trang
+  const [busyId, setBusyId] = useState(null)
+  const [notice, setNotice] = useState(null)
+
+  async function handlePublish(event) {
+    if (!window.confirm(`Công bố "${event.name}"? Khách sẽ thấy sự kiện này.`)) return
+    setBusyId(event.id)
+    setNotice(null)
+    try {
+      const updated = await publishEvent(fetchWithAuth, event.id)
+      setNotice({ type: 'success', text: `Đã công bố ${updated.name}.` })
+      // Tải lại trang hiện tại để nhãn trạng thái và nút của dòng đổi theo kết quả backend
+      reload()
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message })
+    } finally {
+      setBusyId(null)
+    }
+  }
   // Ô tìm kiếm gõ tới đâu hiện tới đó, nhưng chỉ gọi backend khi ngừng gõ 400ms
   const [qInput, setQInput] = useState(q)
   useEffect(() => {
@@ -130,6 +162,15 @@ export default function DashboardEvents() {
         </Link>
       </div>
 
+      {notice && (
+        <p
+          role={notice.type === 'error' ? 'alert' : 'status'}
+          className={`mt-6 rounded-input px-4 py-3 text-body-sm ${notice.type === 'error' ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-fg'}`}
+        >
+          {notice.text}
+        </p>
+      )}
+
       {savedName && (
         <p role="status" className="mt-6 rounded-input bg-success-subtle px-4 py-3 text-body-sm text-fg">
           {justCreated ? 'Đã tạo sự kiện ' : 'Đã lưu thay đổi của '}
@@ -171,12 +212,13 @@ export default function DashboardEvents() {
 
       {/* Đang tải trang mới vẫn giữ danh sách cũ, chỉ làm mờ đi, để không nháy trắng khi bấm lọc hay sang trang */}
       <section aria-label="Danh sách sự kiện" aria-busy={loading} className={`mt-1 rounded-card border border-card-line bg-surface px-card py-2 transition-opacity ${loading && data ? 'opacity-60' : ''}`}>
-        <div aria-hidden="true" className={`hidden gap-x-4 border-b border-line py-3 text-caption font-semibold text-fg-muted md:grid ${ROW_COLUMNS}`}>
+        <div aria-hidden="true" className={`hidden gap-x-4 border-b border-line py-3 text-caption font-semibold text-fg-muted xl:grid ${ROW_COLUMNS}`}>
           <span />
           <span>Sự kiện</span>
           <span>Giờ diễn</span>
           <span>Mở bán</span>
           <span>Trạng thái</span>
+          <span />
         </div>
 
         {loading && !data && (
@@ -221,7 +263,7 @@ export default function DashboardEvents() {
         {!error && items.length > 0 && (
           <ul>
             {items.map((event) => (
-              <EventRow key={event.id} event={event} />
+              <EventRow key={event.id} event={event} busy={busyId === event.id} onPublish={handlePublish} />
             ))}
           </ul>
         )}

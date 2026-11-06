@@ -125,3 +125,18 @@ export async function updateEventStatus(fetchWithAuth, id, status) {
   if (!res.ok) throw new Error(data?.message ?? 'Đổi trạng thái chưa thành công. Vui lòng thử lại.')
   return data
 }
+
+// Công bố bản nháp: PATCH /admin/events/{id}/publish, không có body. Trả EventResponse với status PUBLISHED.
+// Sự kiện không còn là bản nháp thì backend trả lỗi kèm lý do
+export async function publishEvent(fetchWithAuth, id) {
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/admin/events/${id}/publish`, { method: 'PATCH' })
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Công bố chưa thành công. Vui lòng thử lại.')
+  return data
+}
