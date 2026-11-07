@@ -74,7 +74,7 @@ function PosterField({ poster, onChange, onRemove }) {
 }
 
 const input = (invalid) =>
-  `block min-h-11 w-full rounded-input bg-surface px-3 text-body-sm text-fg outline-none placeholder:text-fg-placeholder focus-visible:ring-2 focus-visible:ring-focus ${
+  `block min-h-11 w-full rounded-input bg-surface px-3 text-body-sm text-fg outline-none placeholder:text-fg-placeholder focus-visible:ring-2 focus-visible:ring-focus disabled:bg-surface-sunken disabled:text-fg-muted disabled:cursor-not-allowed ${
     invalid ? 'ring-2 ring-danger' : 'ring-1 ring-input-line'
   }`
 
@@ -97,8 +97,8 @@ function TicketInput({ id, label, error, hint, className = '', ...props }) {
   )
 }
 
-/** Loại vé của sự kiện mới: tên, giá, số lượng, mô tả. Backend bắt buộc ít nhất một loại */
-function TicketSection({ tickets, errors, onAdd, onUpdate, onRemove }) {
+/** Loại vé của sự kiện: tên, giá, số lượng, mô tả. Backend bắt buộc ít nhất một loại */
+function TicketSection({ tickets, errors, onAdd, onUpdate, onRemove, isEdit, canAdd }) {
   const totalQuantity = tickets.reduce((n, t) => n + (Number(t.quantity) || 0), 0)
   return (
     <section aria-labelledby="loai-ve" className="mt-8 border-t border-line pt-6">
@@ -107,7 +107,11 @@ function TicketSection({ tickets, errors, onAdd, onUpdate, onRemove }) {
           <h2 id="loai-ve" className="text-subheading font-bold text-title">
             Loại vé
           </h2>
-          <p className="mt-1 text-body-sm text-fg-muted">Ít nhất một loại. Khách chọn loại vé và số lượng, không chọn ghế.</p>
+          <p className="mt-1 text-body-sm text-fg-muted">
+            {isEdit
+              ? 'Chỉ sửa được loại vé chưa mở bán. Loại vé đã lưu không xoá được.'
+              : 'Ít nhất một loại. Khách chọn loại vé và số lượng, không chọn ghế.'}
+          </p>
         </div>
         <p className="text-body-sm text-fg">
           {tickets.length} loại · <span className="font-semibold">{totalQuantity.toLocaleString('vi-VN')}</span> vé
@@ -118,10 +122,21 @@ function TicketSection({ tickets, errors, onAdd, onUpdate, onRemove }) {
         {tickets.map((t, i) => {
           const e = errors[t.key] ?? {}
           const label = t.name.trim() || `loại vé ${i + 1}`
+          // Vé mới thêm trên form (chưa có id) luôn sửa được; vé đã lưu thì theo luật backend: chỉ vé INACTIVE
+          const isTicketEditable = !isEdit || !t.id || t.status === 'INACTIVE'
           return (
             <li key={t.key} className="rounded-card border border-line bg-surface-sunken/40 p-4">
               <div className="grid gap-3 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,0.8fr)]">
-                <TicketInput id={`${t.key}-name`} label="Tên loại vé" placeholder="VIP, Hạng A, Vé đứng..." maxLength={100} value={t.name} error={e.name} onChange={(ev) => onUpdate(t.key, { name: ev.target.value })} />
+                <TicketInput
+                  id={`${t.key}-name`}
+                  label="Tên loại vé"
+                  placeholder="VIP, Hạng A, Vé đứng..."
+                  maxLength={100}
+                  value={t.name}
+                  error={e.name}
+                  disabled={!isTicketEditable}
+                  onChange={(ev) => onUpdate(t.key, { name: ev.target.value })}
+                />
                 <TicketInput
                   id={`${t.key}-price`}
                   label="Giá (đồng)"
@@ -132,10 +147,23 @@ function TicketSection({ tickets, errors, onAdd, onUpdate, onRemove }) {
                   placeholder="1500000"
                   value={t.price}
                   error={e.price}
+                  disabled={!isTicketEditable}
                   hint={t.price !== '' && Number(t.price) >= 0 ? formatMoney(Number(t.price)) : null}
                   onChange={(ev) => onUpdate(t.key, { price: ev.target.value })}
                 />
-                <TicketInput id={`${t.key}-quantity`} label="Số lượng" type="number" inputMode="numeric" min={1} step={1} placeholder="500" value={t.quantity} error={e.quantity} onChange={(ev) => onUpdate(t.key, { quantity: ev.target.value })} />
+                <TicketInput
+                  id={`${t.key}-quantity`}
+                  label="Số lượng"
+                  type="number"
+                  inputMode="numeric"
+                  min={1}
+                  step={1}
+                  placeholder="500"
+                  value={t.quantity}
+                  error={e.quantity}
+                  disabled={!isTicketEditable}
+                  onChange={(ev) => onUpdate(t.key, { quantity: ev.target.value })}
+                />
               </div>
               <div className="mt-3 flex flex-wrap items-end gap-3">
                 <TicketInput
@@ -144,38 +172,62 @@ function TicketSection({ tickets, errors, onAdd, onUpdate, onRemove }) {
                   className="min-w-0 flex-1 basis-60"
                   placeholder="Khu đứng sát sân khấu, tặng kèm lightstick..."
                   value={t.description}
+                  disabled={!isTicketEditable}
                   onChange={(ev) => onUpdate(t.key, { description: ev.target.value })}
                 />
-                {tickets.length > 1 && (
+                {(!isEdit || !t.id) && tickets.length > 1 && (
                   <button type="button" onClick={() => onRemove(t.key)} aria-label={`Xoá ${label}`} className="inline-flex min-h-11 items-center rounded-pill px-3 text-body-sm font-semibold text-danger hover:bg-danger-subtle">
                     Xoá
                   </button>
                 )}
               </div>
+              {isEdit && !isTicketEditable && (
+                <p className="mt-2 text-caption text-fg-muted">
+                  Loại vé đang ở trạng thái {t.status === 'ACTIVE' ? 'Đang bán' : t.status === 'SOLD_OUT' ? 'Hết vé' : t.status}, không thể chỉnh sửa.
+                </p>
+              )}
             </li>
           )
         })}
       </ul>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <button type="button" onClick={onAdd} disabled={tickets.length >= MAX_TICKET_TYPES} className={`${smallButton} disabled:cursor-not-allowed disabled:opacity-50`}>
-          + Thêm loại vé
-        </button>
-        {tickets.length >= MAX_TICKET_TYPES && <span className="text-caption text-fg-muted">Tối đa {MAX_TICKET_TYPES} loại vé.</span>}
-      </div>
+      {canAdd && (
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button type="button" onClick={onAdd} disabled={tickets.length >= MAX_TICKET_TYPES} className={`${smallButton} disabled:cursor-not-allowed disabled:opacity-50`}>
+            + Thêm loại vé
+          </button>
+          {tickets.length >= MAX_TICKET_TYPES && <span className="text-caption text-fg-muted">Tối đa {MAX_TICKET_TYPES} loại vé.</span>}
+        </div>
+      )}
     </section>
   )
 }
 
 /**
  * Dashboard › Sự kiện › Thêm sự kiện (/events/new) hoặc Sửa sự kiện (/events/:id/edit), cùng một form (A-01).
- * Tạo: nhập luôn các loại vé trong cùng form, gửi một lần. Xong quay về danh sách.
+ * Tạo: nhập thông tin và các loại vé rồi bấm Tạo.
+ * Sửa: tải thông tin sự kiện và các loại vé, cập nhật qua API tương ứng.
  */
 export default function DashboardEventForm() {
   const { id } = useParams()
   const isEdit = Boolean(id)
   const form = useEventForm(id)
-  const { values, error, loading, poster, loaded, loadError, handleChange, handlePosterChange, handleRemovePoster, handleSubmit } = form
+  const {
+    values,
+    error,
+    loading,
+    poster,
+    loaded,
+    loadError,
+    handleChange,
+    handlePosterChange,
+    handleRemovePoster,
+    handleSubmit,
+    canEditMainFields,
+    canEditSaleOpensAt,
+    isSaleOrSoldOut,
+    canAddTickets,
+  } = form
   const pageTitle = isEdit ? 'Sửa sự kiện' : 'Thêm sự kiện'
 
   useEffect(() => {
@@ -215,72 +267,94 @@ export default function DashboardEventForm() {
         </p>
       )}
 
-      {loaded && (
-      <form onSubmit={handleSubmit} noValidate className={`${card} mt-6`}>
-        <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <PosterField poster={poster} onChange={handlePosterChange} onRemove={handleRemovePoster} />
-
-          <div className="space-y-4">
-            <TextField label="Tên sự kiện" required placeholder="VŨ. Live Concert" {...field('name')} />
-            <TextField label="Địa điểm" required placeholder="Cung Thể thao Quần Ngựa" {...field('venue')} />
-            <TextField label="Địa chỉ" optional placeholder="Văn Cao, Ba Đình, Hà Nội" {...field('address')} />
-            <TextField
-              label="Link Google Maps"
-              optional
-              type="url"
-              inputMode="url"
-              placeholder="https://maps.app.goo.gl/..."
-              hint="Trên Google Maps, mở địa điểm rồi bấm Chia sẻ › Sao chép đường liên kết."
-              {...field('googleMapsUrl')}
-            />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField label="Giờ diễn" required type="datetime-local" hint="Giờ Hà Nội." {...field('startsAt')} />
-              <TextField label="Giờ mở bán" required type="datetime-local" hint="Phải trước giờ diễn." {...field('saleOpensAt')} />
+      {loaded && !loadError && (
+        <form onSubmit={handleSubmit} noValidate className={`${card} mt-6`}>
+          {isSaleOrSoldOut && (
+            <div className="mb-6 rounded-input bg-surface-sunken px-4 py-3 text-body-sm text-fg-muted">
+              Sự kiện đã mở bán. Giờ mở bán không đổi được nữa, các thông tin khác vẫn sửa được.
             </div>
-            <div>
-              <label htmlFor="mo-ta-su-kien" className="text-body-sm font-medium text-fg">
-                Mô tả <span className="font-normal text-fg-muted">(không bắt buộc)</span>
-              </label>
-              <textarea
-                id="mo-ta-su-kien"
-                name="description"
-                rows={5}
-                value={values.description}
-                onChange={handleChange}
-                placeholder="Giới thiệu nghệ sĩ, chương trình, lưu ý khi vào cửa..."
-                className="mt-1.5 block w-full rounded-input bg-surface px-4 py-3 text-body text-fg ring-1 ring-input-line outline-none placeholder:text-fg-placeholder focus-visible:ring-2 focus-visible:ring-focus"
+          )}
+
+          <div className="grid gap-8 lg:grid-cols-[280px_minmax(0,1fr)]">
+            <PosterField poster={poster} onChange={handlePosterChange} onRemove={handleRemovePoster} />
+
+            <div className="space-y-4">
+              <TextField label="Tên sự kiện" required placeholder="VŨ. Live Concert" disabled={!canEditMainFields} {...field('name')} />
+              <TextField label="Địa điểm" required placeholder="Cung Thể thao Quần Ngựa" disabled={!canEditMainFields} {...field('venue')} />
+              <TextField label="Địa chỉ" optional placeholder="Văn Cao, Ba Đình, Hà Nội" disabled={!canEditMainFields} {...field('address')} />
+              <TextField
+                label="Link Google Maps"
+                optional
+                type="url"
+                inputMode="url"
+                placeholder="https://maps.app.goo.gl/..."
+                hint="Trên Google Maps, mở địa điểm rồi bấm Chia sẻ › Sao chép đường liên kết."
+                disabled={!canEditMainFields}
+                {...field('googleMapsUrl')}
               />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField label="Giờ diễn" required type="datetime-local" hint="Giờ Hà Nội." disabled={!canEditMainFields} {...field('startsAt')} />
+                <TextField
+                  label="Giờ mở bán"
+                  required
+                  type="datetime-local"
+                  hint={!canEditSaleOpensAt ? 'Đã đến hoặc qua giờ mở bán, không thể thay đổi.' : 'Phải trước giờ diễn.'}
+                  disabled={!canEditSaleOpensAt}
+                  {...field('saleOpensAt')}
+                />
+              </div>
+              <div>
+                <label htmlFor="mo-ta-su-kien" className="text-body-sm font-medium text-fg">
+                  Mô tả <span className="font-normal text-fg-muted">(không bắt buộc)</span>
+                </label>
+                <textarea
+                  id="mo-ta-su-kien"
+                  name="description"
+                  rows={5}
+                  value={values.description}
+                  onChange={handleChange}
+                  placeholder="Giới thiệu nghệ sĩ, chương trình, lưu ý khi vào cửa..."
+                  className="mt-1.5 block w-full rounded-input bg-surface px-4 py-3 text-body text-fg ring-1 ring-input-line outline-none placeholder:text-fg-placeholder focus-visible:ring-2 focus-visible:ring-focus disabled:bg-surface-sunken disabled:text-fg-muted disabled:cursor-not-allowed"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {!isEdit && <TicketSection tickets={form.tickets} errors={form.ticketErrors} onAdd={form.addTicket} onUpdate={form.updateTicket} onRemove={form.removeTicket} />}
+          <TicketSection
+            tickets={form.tickets}
+            errors={form.ticketErrors}
+            onAdd={form.addTicket}
+            onUpdate={form.updateTicket}
+            onRemove={form.removeTicket}
+            isEdit={isEdit}
+            canAdd={canAddTickets}
+          />
 
-        <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
-          <PrimaryButton type="submit" disabled={loading || uploading}>
-            {loading && <Spinner />}
-            {isEdit ? (loading ? 'Đang lưu...' : 'Lưu thay đổi') : loading ? 'Đang tạo...' : 'Tạo sự kiện'}
-          </PrimaryButton>
-          <Link to="/dashboard/events" className={smallButton}>
-            Huỷ
-          </Link>
-          {uploading && <p className="text-body-sm text-fg-muted">Chờ ảnh tải xong rồi {isEdit ? 'lưu' : 'tạo'}.</p>}
-        </div>
+          <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
+            <PrimaryButton type="submit" disabled={loading || uploading}>
+              {loading && <Spinner />}
+              {isEdit ? (loading ? 'Đang lưu...' : 'Lưu thay đổi') : loading ? 'Đang tạo...' : 'Tạo sự kiện'}
+            </PrimaryButton>
+            <Link to={isEdit ? `/dashboard/events/${id}` : '/dashboard/events'} className={smallButton}>
+              Huỷ
+            </Link>
+            {uploading && <p className="text-body-sm text-fg-muted">Chờ ảnh tải xong rồi {isEdit ? 'lưu' : 'tạo'}.</p>}
+          </div>
 
-        <AnimatePresence>
-          {error.form && (
-            <m.p
-              role="alert"
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="mt-3 rounded-input bg-danger-subtle px-4 py-3 text-body-sm text-danger"
-            >
-              {error.form}
-            </m.p>
-          )}
-        </AnimatePresence>
-      </form>
+          <AnimatePresence>
+            {error.form && (
+              <m.p
+                role="alert"
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="mt-3 rounded-input bg-danger-subtle px-4 py-3 text-body-sm text-danger"
+              >
+                {error.form}
+              </m.p>
+            )}
+          </AnimatePresence>
+        </form>
       )}
     </div>
   )

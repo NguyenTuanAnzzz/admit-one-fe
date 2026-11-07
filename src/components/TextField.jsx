@@ -47,7 +47,7 @@ export function TextField({ label, id, error, hint, required = false, optional =
           required={required}
           aria-invalid={Boolean(error)}
           aria-describedby={describedBy}
-          className={`block min-h-11 w-full rounded-input bg-surface px-4 text-body text-fg ring-1 ring-input-line outline-none placeholder:text-fg-placeholder focus-visible:ring-2 focus-visible:ring-focus aria-[invalid=true]:ring-input-line-invalid ${isPassword ? 'pr-12' : ''}`}
+          className={`block min-h-11 w-full rounded-input bg-surface px-4 text-body text-fg ring-1 ring-input-line outline-none placeholder:text-fg-placeholder focus-visible:ring-2 focus-visible:ring-focus aria-[invalid=true]:ring-input-line-invalid disabled:bg-surface-sunken disabled:text-fg-muted disabled:cursor-not-allowed ${isPassword ? 'pr-12' : ''}`}
           {...inputProps}
         />
         {isPassword && (

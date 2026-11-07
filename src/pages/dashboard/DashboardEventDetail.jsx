@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { PrimaryButton } from '../../components/Button'
 import { PosterViewer } from '../../components/PosterViewer'
 import { Spinner } from '../../components/Spinner'
@@ -30,7 +30,7 @@ const formatHanoi = (iso) => {
 const money = (price) => formatMoney(Number(price) || 0)
 
 /** Một loại vé: tên, mô tả, giá, thanh đã bán / tổng số vé, trạng thái */
-function TicketRow({ ticket }) {
+function TicketRow({ ticket, eventStatus }) {
   const sold = ticket.soldQuantity ?? 0
   const percent = ticket.quantity ? Math.min(100, Math.round((sold / ticket.quantity) * 100)) : 0
   return (
@@ -50,7 +50,8 @@ function TicketRow({ ticket }) {
         </div>
       </div>
       <span className={`inline-flex w-fit items-center rounded-badge px-2.5 py-1 text-caption font-semibold ${TICKET_STATUS_STYLE[ticket.status] ?? ''}`}>
-        {TICKET_STATUS_LABEL[ticket.status] ?? ticket.status}
+        {/* Bản nháp: vé INACTIVE là chưa mở bán (công bố xong backend chuyển sang ACTIVE), không phải tạm ngưng */}
+        {eventStatus === EVENT_STATUS.DRAFT && ticket.status === 'INACTIVE' ? 'Chưa mở bán' : (TICKET_STATUS_LABEL[ticket.status] ?? ticket.status)}
       </span>
     </li>
   )
@@ -67,7 +68,13 @@ export default function DashboardEventDetail() {
   const [result, setResult] = useState({ key: null, event: null, error: null })
   const [reloadKey, setReloadKey] = useState(0)
   const [publishing, setPublishing] = useState(false)
-  const [notice, setNotice] = useState(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+  // Từ form sửa quay về kèm tên vừa lưu. Giữ vào state rồi xoá khỏi history để F5 không báo lại
+  const [notice, setNotice] = useState(() => (location.state?.saved ? { type: 'success', text: `Đã lưu thay đổi của ${location.state.saved}.` } : null))
+  useEffect(() => {
+    if (location.state?.saved) navigate(location.pathname, { replace: true, state: null })
+  }, [location, navigate])
 
   const key = `${id}#${reloadKey}`
 
@@ -121,6 +128,8 @@ export default function DashboardEventDetail() {
     { quantity: 0, sold: 0, revenue: 0 },
   )
 
+  const canEdit = event && event.status !== EVENT_STATUS.CANCELLED && (!event.startsAt || new Date(event.startsAt) > new Date())
+
   return (
     <div>
       <Link to="/dashboard/events" className="inline-flex min-h-11 items-center text-body-sm font-semibold text-fg-muted hover:text-title">
@@ -160,12 +169,19 @@ export default function DashboardEventDetail() {
               </span>
               <h1 className="mt-2 font-display text-heading font-bold text-title">{event.name}</h1>
             </div>
-            {event.status === EVENT_STATUS.DRAFT && (
-              <PrimaryButton type="button" disabled={publishing} onClick={handlePublish}>
-                {publishing && <Spinner />}
-                {publishing ? 'Đang công bố...' : 'Công bố'}
-              </PrimaryButton>
-            )}
+            <div className="flex flex-wrap items-center gap-3">
+              {canEdit && (
+                <Link to={`/dashboard/events/${event.id}/edit`} className={smallButton}>
+                  Sửa sự kiện
+                </Link>
+              )}
+              {event.status === EVENT_STATUS.DRAFT && (
+                <PrimaryButton type="button" disabled={publishing} onClick={handlePublish}>
+                  {publishing && <Spinner />}
+                  {publishing ? 'Đang công bố...' : 'Công bố'}
+                </PrimaryButton>
+              )}
+            </div>
           </div>
 
           <div className="mt-6 grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start">
@@ -236,7 +252,7 @@ export default function DashboardEventDetail() {
                 </div>
                 <ul>
                   {tickets.map((t) => (
-                    <TicketRow key={t.id} ticket={t} />
+                    <TicketRow key={t.id} ticket={t} eventStatus={event.status} />
                   ))}
                 </ul>
               </>

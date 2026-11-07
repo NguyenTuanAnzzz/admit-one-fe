@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createEvent, getAdminEvent, updateEvent, uploadPoster } from '../api/eventApi'
+import { addTicket as addTicketApi, createEvent, getAdminEvent, updateEvent, updateTicket as updateTicketApi, uploadPoster } from '../api/eventApi'
 import { useAuth } from '../context/AuthContext'
 import { hanoiParts } from '../lib/format'
 
@@ -26,6 +26,7 @@ function validateTickets(tickets) {
     else if (Number(t.price) < 0) e.price = 'Giá vé không được âm.'
     if (t.quantity === '') e.quantity = 'Nhập số lượng.'
     else if (!Number.isInteger(Number(t.quantity)) || Number(t.quantity) <= 0) e.quantity = 'Số lượng là số nguyên lớn hơn 0.'
+    else if (t.soldQuantity && Number(t.quantity) < t.soldQuantity) e.quantity = `Số lượng không được nhỏ hơn số vé đã bán (${t.soldQuantity}).`
     if (Object.keys(e).length) rows[t.key] = e
   })
   return rows
@@ -43,6 +44,7 @@ const hanoiToIso = (value) => new Date(`${value}:00+07:00`).toISOString()
 
 /** Chiều ngược lại, để điền sẵn form sửa: ISO UTC từ backend → "2026-12-20T19:30" theo giờ Hà Nội */
 function isoToHanoiInput(iso) {
+  if (!iso) return ''
   const p = hanoiParts(iso)
   return `${p.year}-${p.month}-${p.day}T${p.time}`
 }
@@ -58,6 +60,27 @@ function fromEvent(e) {
     startsAt: isoToHanoiInput(e.startsAt),
     saleOpensAt: isoToHanoiInput(e.saleOpensAt),
   }
+}
+
+/** Danh sách loại vé từ backend → danh sách cho form */
+function fromTickets(ticketList = []) {
+  if (!ticketList.length) return [newTicket()]
+  return ticketList.map((t) => ({
+    id: t.id,
+    key: t.id || `ve-${ticketCounter++}`,
+    name: t.name ?? '',
+    description: t.description ?? '',
+    price: t.price != null ? String(t.price) : '',
+    quantity: t.quantity != null ? String(t.quantity) : '',
+    soldQuantity: t.soldQuantity ?? 0,
+    status: t.status,
+    original: {
+      name: t.name ?? '',
+      description: t.description ?? '',
+      price: t.price != null ? String(t.price) : '',
+      quantity: t.quantity != null ? String(t.quantity) : '',
+    },
+  }))
 }
 
 /** Cùng luật với EventRequest ở backend, thêm kiểm tra giờ mở bán trước giờ diễn (backend kiểm tra trong EventService). */
@@ -83,7 +106,7 @@ function focusFirstError(errors) {
 
 /**
  * Logic form sự kiện ở dashboard, dùng cho cả tạo (eventId rỗng) và sửa (có eventId), cùng kiểu useRegister.
- * Sửa: tải GET /admin/events/{id} để điền sẵn form và poster, lưu bằng PUT.
+ * Sửa: tải GET /admin/events/{id} để điền sẵn form, poster và vé. Lưu thông tin bằng PUT và vé bằng PUT /tickets/{ticketId}.
  * Tạo: POST /admin/events gửi kèm danh sách loại vé (tickets), backend bắt buộc có ít nhất một loại.
  * Ảnh poster tải lên ngay khi chọn file (POST /admin/uploads/poster), trong lúc admin điền tiếp các ô khác.
  * poster.status: idle (chưa chọn) / uploading / done / error.
@@ -91,10 +114,10 @@ function focusFirstError(errors) {
 export default function useEventForm(eventId) {
   const { fetchWithAuth } = useAuth()
   const navigate = useNavigate()
+  const [eventData, setEventData] = useState(null)
   const [values, setValues] = useState(EMPTY)
   const [error, setError] = useState({})
   const [loading, setLoading] = useState(false)
-  // Loại vé chỉ nhập lúc tạo: backend chưa có API sửa vé
   const [tickets, setTickets] = useState(() => [newTicket()])
   const [ticketErrors, setTicketErrors] = useState({})
   const [poster, setPoster] = useState({ status: 'idle', url: null, previewUrl: null, error: null })
@@ -112,17 +135,42 @@ export default function useEventForm(eventId) {
     getAdminEvent(fetchWithAuth, eventId)
       .then((data) => {
         if (cancelled) return
+        if (data.status === 'CANCELLED' || (data.startsAt && new Date(data.startsAt) <= new Date())) {
+          setLoadError('Sự kiện đã kết thúc hoặc đã huỷ, không thể chỉnh sửa.')
+          setLoaded(true)
+          return
+        }
+        setEventData(data)
         setValues(fromEvent(data))
+        setTickets(fromTickets(data.tickets))
         if (data.posterUrl) setPoster({ status: 'done', url: data.posterUrl, previewUrl: data.posterUrl, error: null })
         setLoaded(true)
       })
-      .catch((err) => !cancelled && setLoadError(err.message))
+      .catch((err) => {
+        if (!cancelled) {
+          setLoadError(err.message)
+          setLoaded(true)
+        }
+      })
     return () => {
       cancelled = true
     }
     // fetchWithAuth đổi mỗi khi làm mới token, không tải lại sự kiện vì thế
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId])
+
+  // Phân quyền sửa theo trạng thái sự kiện từ backend
+  const status = eventData?.status
+  const isDraft = !eventId || status === 'DRAFT'
+  const isUpcoming = Boolean(eventId) && status === 'UPCOMING'
+  const isSaleOrSoldOut = Boolean(eventId) && (status === 'ON_SALE' || status === 'SOLD_OUT')
+  // Khớp updateEvent ở backend: còn sửa được sự kiện (chưa huỷ, chưa diễn) thì sửa được tên, địa điểm, giờ diễn.
+  // Chỉ giờ mở bán bị khoá khi đã tới giờ mở bán
+  const canEditMainFields = true
+  // addTicket ở backend cho thêm khi DRAFT hoặc UPCOMING. FE chặt hơn: UPCOMING mà đã tới giờ mở bán thì không cho thêm,
+  // vì backend chưa tự chuyển UPCOMING sang ON_SALE nên chỉ nhìn status sẽ thêm được vé sau khi đã mở bán
+  const canAddTickets = !eventId || isDraft || (isUpcoming && eventData?.saleOpensAt && new Date(eventData.saleOpensAt) > new Date())
+  const canEditSaleOpensAt = !eventId || isDraft || (isUpcoming && eventData?.saleOpensAt && new Date(eventData.saleOpensAt) > new Date())
 
   // Chỉ giữ và thu hồi link blob: (ảnh trên máy). Link Cloudinary của poster cũ không phải thu hồi
   function setPreview(url) {
@@ -166,7 +214,7 @@ export default function useEventForm(eventId) {
     setTickets((list) => (list.length >= MAX_TICKET_TYPES ? list : [...list, newTicket()]))
   }
 
-  function updateTicket(key, patch) {
+  function updateTicketState(key, patch) {
     setTickets((list) => list.map((t) => (t.key === key ? { ...t, ...patch } : t)))
     // Sửa ô nào thì bỏ lỗi của ô đó
     setTicketErrors((errs) => {
@@ -177,8 +225,9 @@ export default function useEventForm(eventId) {
     })
   }
 
+  // Chỉ bỏ được vé mới thêm trên form (chưa có id). Backend chưa có API xoá vé đã lưu
   function removeTicket(key) {
-    setTickets((list) => (list.length > 1 ? list.filter((t) => t.key !== key) : list))
+    setTickets((list) => (list.length > 1 ? list.filter((t) => t.key !== key || t.id) : list))
   }
 
   function handleRemovePoster() {
@@ -189,7 +238,7 @@ export default function useEventForm(eventId) {
   async function handleSubmit(e) {
     e.preventDefault()
     const next = validate(values)
-    const nextTickets = eventId ? {} : validateTickets(tickets)
+    const nextTickets = validateTickets(tickets)
     setError(next)
     setTicketErrors(nextTickets)
     if (Object.keys(next).length) {
@@ -203,6 +252,13 @@ export default function useEventForm(eventId) {
       return
     }
 
+    const ticketPayload = tickets.map((t) => ({
+      name: t.name.trim(),
+      description: t.description.trim() || null,
+      price: Number(t.price),
+      quantity: Number(t.quantity),
+    }))
+
     const payload = {
       name: values.name.trim(),
       venue: values.venue.trim(),
@@ -212,24 +268,58 @@ export default function useEventForm(eventId) {
       posterUrl: poster.url,
       startsAt: hanoiToIso(values.startsAt),
       saleOpensAt: hanoiToIso(values.saleOpensAt),
+      tickets: ticketPayload,
+    }
+
+    // Sự kiện đã công bố: khách đang thấy, hỏi lại trước khi lưu
+    if (eventId && !isDraft) {
+      const ok = window.confirm('Sự kiện đã công bố, khách đang thấy. Thay đổi hiện ngay với khách, đổi giờ diễn hoặc địa điểm ảnh hưởng tới người đã mua vé. Lưu thay đổi?')
+      if (!ok) return
     }
 
     setLoading(true)
     try {
       if (eventId) {
-        const data = await updateEvent(fetchWithAuth, eventId, payload)
-        // Danh sách đọc state này để báo "Đã lưu ..." ở đầu trang
-        navigate('/dashboard/events', { state: { saved: data.name } })
-      } else {
-        const data = await createEvent(fetchWithAuth, {
-          ...payload,
-          tickets: tickets.map((t) => ({
+        // Cập nhật các loại vé đã thay đổi (chỉ vé INACTIVE mới cập nhật được ở backend)
+        const changedTickets = tickets.filter((t) => {
+          if (!t.id) return false
+          if (t.status && t.status !== 'INACTIVE') return false
+          const orig = t.original
+          if (!orig) return true
+          return (
+            t.name.trim() !== orig.name ||
+            (t.description.trim() || '') !== (orig.description || '') ||
+            Number(t.price) !== Number(orig.price) ||
+            Number(t.quantity) !== Number(orig.quantity)
+          )
+        })
+
+        for (const t of changedTickets) {
+          await updateTicketApi(fetchWithAuth, eventId, t.id, {
             name: t.name.trim(),
             description: t.description.trim() || null,
             price: Number(t.price),
             quantity: Number(t.quantity),
-          })),
-        })
+          })
+        }
+
+        // Vé mới thêm trên form (chưa có id): gọi POST /tickets từng vé
+        for (const t of tickets.filter((x) => !x.id)) {
+          const created = await addTicketApi(fetchWithAuth, eventId, {
+            name: t.name.trim(),
+            description: t.description.trim() || null,
+            price: Number(t.price),
+            quantity: Number(t.quantity),
+          })
+          // Gắn id để lỡ bước sau lỗi mà bấm Lưu lại thì không tạo trùng vé
+          setTickets((list) => list.map((x) => (x.key === t.key ? { ...x, id: created.id, status: created.status } : x)))
+        }
+
+        const data = await updateEvent(fetchWithAuth, eventId, payload)
+        // Trang chi tiết đọc state này để báo "Đã lưu ..." ở đầu trang
+        navigate(`/dashboard/events/${eventId}`, { state: { saved: data.name } })
+      } else {
+        const data = await createEvent(fetchWithAuth, payload)
         // Danh sách đọc state này để báo "Đã tạo ..." ở đầu trang
         navigate('/dashboard/events', { state: { saved: data.name, created: true } })
       }
@@ -253,7 +343,14 @@ export default function useEventForm(eventId) {
     tickets,
     ticketErrors,
     addTicket,
-    updateTicket,
+    updateTicket: updateTicketState,
     removeTicket,
+    eventData,
+    isDraft,
+    isUpcoming,
+    isSaleOrSoldOut,
+    canEditMainFields,
+    canAddTickets,
+    canEditSaleOpensAt,
   }
 }

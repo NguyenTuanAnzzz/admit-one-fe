@@ -72,6 +72,42 @@ export async function updateEvent(fetchWithAuth, id, event) {
   return data
 }
 
+// Sửa thông tin một loại vé: PUT /admin/events/{eventId}/tickets/{ticketId}. Backend chỉ cho sửa vé INACTIVE
+export async function updateTicket(fetchWithAuth, eventId, ticketId, ticket) {
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/admin/events/${eventId}/tickets/${ticketId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ticket),
+    })
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Lưu loại vé chưa thành công. Vui lòng thử lại.')
+  return data
+}
+
+// Thêm một loại vé vào sự kiện đã có: POST /admin/events/{eventId}/tickets. Backend chỉ cho khi DRAFT hoặc UPCOMING
+export async function addTicket(fetchWithAuth, eventId, ticket) {
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/admin/events/${eventId}/tickets`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(ticket),
+    })
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Thêm loại vé chưa thành công. Vui lòng thử lại.')
+  return data
+}
+
 // Bước 1: tải ảnh poster lên Cloudinary qua backend, nhận về { url, publicId }
 export async function uploadPoster(fetchWithAuth, file) {
   const body = new FormData()

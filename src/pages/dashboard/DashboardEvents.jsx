@@ -20,7 +20,7 @@ const pageButton = (active) =>
 const PAGE_SIZE = 10
 
 // Cột của hàng tiêu đề và từng dòng phải giống nhau để thẳng hàng: poster, tên, giờ diễn, mở bán, trạng thái, nút
-const ROW_COLUMNS = 'xl:grid-cols-[56px_minmax(0,1fr)_130px_130px_100px_110px]'
+const ROW_COLUMNS = 'xl:grid-cols-[56px_minmax(0,1fr)_130px_130px_100px_170px]'
 const rowPrimary =
   'inline-flex min-h-11 items-center gap-2 rounded-pill border-[1.5px] border-button-primary bg-button-primary px-4 text-body-sm font-semibold text-button-primary-fg hover:border-button-primary-hover hover:bg-button-primary-hover disabled:cursor-not-allowed disabled:opacity-60'
 
@@ -30,6 +30,8 @@ const formatHanoi = (iso) => {
 }
 
 function EventRow({ event, busy, onPublish }) {
+  const canEdit = event.status !== EVENT_STATUS.CANCELLED && (!event.startsAt || new Date(event.startsAt) > new Date())
+
   return (
     <li className={`grid grid-cols-[56px_minmax(0,1fr)] gap-x-4 gap-y-2 border-t border-line py-4 first:border-t-0 xl:items-center ${ROW_COLUMNS}`}>
       {event.posterUrl ? (
@@ -61,7 +63,16 @@ function EventRow({ event, busy, onPublish }) {
           {EVENT_STATUS_LABEL[event.status] ?? event.status}
         </span>
       </div>
-      <div className="col-start-2 xl:col-start-auto xl:flex xl:justify-end">
+      <div className="col-start-2 flex flex-wrap items-center gap-2 xl:col-start-auto xl:justify-end">
+        {canEdit && (
+          <Link
+            to={`${event.id}/edit`}
+            aria-label={`Sửa ${event.name}`}
+            className="inline-flex min-h-11 items-center justify-center rounded-pill border-[1.5px] border-button-secondary-line px-3.5 text-body-sm font-semibold text-button-secondary-fg hover:border-fg hover:bg-button-secondary-hover"
+          >
+            Sửa
+          </Link>
+        )}
         {/* Chỉ bản nháp mới công bố được. aria-label có tên sự kiện để trình đọc màn hình không nghe "Công bố" lặp lại ở mọi dòng */}
         {event.status === EVENT_STATUS.DRAFT && (
           <button type="button" disabled={busy} onClick={() => onPublish(event)} aria-label={`Công bố ${event.name}`} className={rowPrimary}>
