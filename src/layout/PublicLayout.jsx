@@ -6,8 +6,8 @@ import { SiteHeader } from '../components/SiteHeader'
 import { useAuth } from '../context/AuthContext'
 
 /**
- * Khung chung cho các trang công khai ngoài trang chủ (Sự kiện, Cách mua vé, Hỏi đáp): header, nội dung, footer.
- * Tìm ở header thì sang /events?q=, trang Sự kiện đọc q trên URL nên đang đứng ở đó cũng lọc ngay.
+ * Khung chung cho các trang công khai ngoài trang chủ (Cách mua vé, Hỏi đáp): header, nội dung, footer.
+ * Tìm ở header thì về trang chủ (#events) kèm từ khoá, trang chủ lọc danh sách sự kiện mẫu theo từ khoá đó.
  * LazyMotion bọc ngoài vì nút, ô nhập dùng m.* của Framer Motion.
  */
 export default function PublicLayout() {
@@ -27,10 +27,10 @@ export default function PublicLayout() {
             linkBase="/"
             onLogin={() => navigate('/login')}
             onLogout={logout}
-            onSearch={(q) => navigate(q ? `/events?q=${encodeURIComponent(q)}` : '/events')}
+            onSearch={(q) => navigate('/#events', { state: { q } })}
           />
           <div className="flex-1">
-            {/* Trang tải khi cần (React.lazy, ví dụ trang chi tiết sự kiện) hiện dòng chờ này trong lúc tải */}
+            {/* Trang tải khi cần (React.lazy) hiện dòng chờ này trong lúc tải */}
             <Suspense fallback={<p role="status" className="mx-auto max-w-page px-gutter py-section-sm text-body-sm text-fg-muted">Đang tải trang...</p>}>
               <Outlet />
             </Suspense>

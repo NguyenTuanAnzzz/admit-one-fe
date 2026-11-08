@@ -51,7 +51,7 @@ export function Hero() {
           </m.dl>
 
           <m.div variants={fadeUp} className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
-            <PrimaryButton as="a" href="/events" className="min-h-12 px-7 text-body">
+            <PrimaryButton as="a" href="#events" className="min-h-12 px-7 text-body">
               Mua vé · từ {formatMoney(ev.priceFrom)}
             </PrimaryButton>
             <p className="text-body-sm text-fg-muted">Vé được giữ 10 phút để bạn thanh toán.</p>

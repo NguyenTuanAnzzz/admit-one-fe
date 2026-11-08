@@ -8,7 +8,6 @@ import DashboardHome from '../pages/dashboard/DashboardHome'
 import DashboardPlaceholder from '../pages/dashboard/DashboardPlaceholder'
 import HomePage from '../pages/HomePage'
 import LoginPage from '../pages/LoginPage'
-import EventsPage from '../pages/EventsPage'
 import FaqPage from '../pages/FaqPage'
 import HowToBuyPage from '../pages/HowToBuyPage'
 import ProfilePage from '../pages/ProfilePage'
@@ -21,11 +20,8 @@ import ProtectRoute from './ProtectRoute'
 const DashboardEvents = lazy(() => import('../pages/dashboard/DashboardEvents'))
 const DashboardEventForm = lazy(() => import('../pages/dashboard/DashboardEventForm'))
 const DashboardEventDetail = lazy(() => import('../pages/dashboard/DashboardEventDetail'))
-const DashboardEventTiers = lazy(() => import('../pages/dashboard/DashboardEventTiers'))
 const DashboardStaff = lazy(() => import('../pages/dashboard/DashboardStaff'))
 const DashboardStaffForm = lazy(() => import('../pages/dashboard/DashboardStaffForm'))
-// Suspense chờ tải nằm ở PublicLayout
-const EventDetailPage = lazy(() => import('../pages/EventDetailPage'))
 
 // Mục dashboard đã có trang thật: [đường dẫn con, trang], '' là trang chính của mục. Mục chưa có ở đây hiện trang "Sắp có"
 const DASHBOARD_PAGES = {
@@ -34,7 +30,6 @@ const DASHBOARD_PAGES = {
     ['new', DashboardEventForm],
     [':id', DashboardEventDetail],
     [':id/edit', DashboardEventForm],
-    [':id/tiers', DashboardEventTiers],
   ],
   staff: [
     ['', DashboardStaff],
@@ -49,8 +44,6 @@ export default function AppRoute() {
       <Route path="/" element={<HomePage />} />
       {/* Trang công khai, không cần đăng nhập: chung header và footer */}
       <Route element={<PublicLayout />}>
-        <Route path="/events" element={<EventsPage />} />
-        <Route path="/events/:id" element={<EventDetailPage />} />
         <Route path="/how-to-buy" element={<HowToBuyPage />} />
         <Route path="/faq" element={<FaqPage />} />
       </Route>
