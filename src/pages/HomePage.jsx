@@ -5,6 +5,7 @@ import { SiteHeader } from '../components/SiteHeader'
 import { Hero } from '../components/Hero'
 import { EventList } from '../components/EventList'
 import { BuyingFlow } from '../components/BuyingFlow'
+import { Partners } from '../components/Partners'
 import { Faq } from '../components/Faq'
 import { SiteFooter } from '../components/SiteFooter'
 import { useAuth } from '../context/AuthContext'
@@ -40,6 +41,7 @@ export default function HomePage() {
           <main id="main-content">
             <Hero />
             <EventList query={query} onClearQuery={() => setQuery('')} />
+            <Partners />
             <BuyingFlow />
             <Faq />
           </main>

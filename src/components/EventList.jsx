@@ -60,7 +60,7 @@ export function EventList({ query, onClearQuery }) {
   return (
     <section id="events" aria-labelledby="events-tieu-de" className="px-gutter py-section-sm md:py-section">
       <div className="mx-auto max-w-page">
-        <SectionHeading id="events-tieu-de" title="Sự kiện tại Hà Nội">
+        <SectionHeading id="events-tieu-de" title="Sự kiện nổi bật">
           <div role="group" aria-label="Lọc theo trạng thái" className="flex flex-wrap gap-2">
             {FILTERS.map((f) => (
               <button

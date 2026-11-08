@@ -72,3 +72,14 @@
     transform: none;
   }
 }
+
+/* Băng đối tác trên trang chủ (Partners): trượt sang trái đúng một nửa dải (danh sách in hai lần) rồi lặp lại.
+   -50% tính theo cả dải, cộng nửa khoảng cách gap-3 (0.375rem) để bản sao khớp đúng vị trí bản đầu */
+@keyframes partners-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 0.375rem));
+  }
+}
