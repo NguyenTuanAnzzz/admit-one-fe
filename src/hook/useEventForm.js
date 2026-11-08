@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { addTicket as addTicketApi, createEvent, getAdminEvent, updateEvent, updateTicket as updateTicketApi, uploadPoster } from '../api/eventApi'
+import { addTicket as addTicketApi, createEvent, deleteTicket as deleteTicketApi, getAdminEvent, updateEvent, updateTicket as updateTicketApi, uploadPoster } from '../api/eventApi'
 import { useAuth } from '../context/AuthContext'
 import { hanoiParts } from '../lib/format'
 
@@ -119,6 +119,8 @@ export default function useEventForm(eventId) {
   const [error, setError] = useState({})
   const [loading, setLoading] = useState(false)
   const [tickets, setTickets] = useState(() => [newTicket()])
+  // Loại vé đã lưu đang được xoá (khoá nút Xoá của dòng đó)
+  const [deletingKey, setDeletingKey] = useState(null)
   const [ticketErrors, setTicketErrors] = useState({})
   const [poster, setPoster] = useState({ status: 'idle', url: null, previewUrl: null, error: null })
   // Sửa: chờ tải xong sự kiện mới hiện form, để admin không gõ vào form rỗng rồi bị ghi đè
@@ -228,6 +230,29 @@ export default function useEventForm(eventId) {
   // Chỉ bỏ được vé mới thêm trên form (chưa có id). Backend chưa có API xoá vé đã lưu
   function removeTicket(key) {
     setTickets((list) => (list.length > 1 ? list.filter((t) => t.key !== key || t.id) : list))
+  }
+
+  // Khớp deleteTicket ở backend: chỉ xoá loại vé đã lưu khi sự kiện còn DRAFT và chưa bán vé nào
+  const canDeleteSavedTicket = (t) => Boolean(eventId && isDraft && t.id && !t.soldQuantity)
+
+  // Xoá loại vé đã lưu: gọi backend ngay (không đợi bấm Lưu) vì không hoàn tác được, hỏi xác nhận trước
+  async function deleteSavedTicket(t) {
+    const label = t.original?.name || t.name || 'loại vé này'
+    if (!window.confirm(`Xoá loại vé "${label}"? Không hoàn tác được.`)) return
+    setDeletingKey(t.key)
+    setError((e) => ({ ...e, form: undefined }))
+    try {
+      await deleteTicketApi(fetchWithAuth, eventId, t.id)
+      // Xoá hết thì để lại một dòng trống: sự kiện cần ít nhất một loại vé mới lưu được
+      setTickets((list) => {
+        const rest = list.filter((x) => x.key !== t.key)
+        return rest.length ? rest : [newTicket()]
+      })
+    } catch (err) {
+      setError((e) => ({ ...e, form: err.message }))
+    } finally {
+      setDeletingKey(null)
+    }
   }
 
   function handleRemovePoster() {
@@ -345,6 +370,9 @@ export default function useEventForm(eventId) {
     addTicket,
     updateTicket: updateTicketState,
     removeTicket,
+    canDeleteSavedTicket,
+    deleteSavedTicket,
+    deletingKey,
     eventData,
     isDraft,
     isUpcoming,

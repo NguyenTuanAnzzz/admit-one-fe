@@ -108,6 +108,22 @@ export async function addTicket(fetchWithAuth, eventId, ticket) {
   return data
 }
 
+// Xoá hẳn một loại vé: DELETE /admin/events/{eventId}/tickets/{ticketId}, trả 204 không có body.
+// Backend chỉ cho xoá khi sự kiện còn DRAFT và loại vé chưa bán vé nào, sai thì 409 kèm lý do
+export async function deleteTicket(fetchWithAuth, eventId, ticketId) {
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/admin/events/${eventId}/tickets/${ticketId}`, { method: 'DELETE' })
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null)
+    throw new Error(data?.message ?? 'Xoá loại vé chưa thành công. Vui lòng thử lại.')
+  }
+}
+
 // Bước 1: tải ảnh poster lên Cloudinary qua backend, nhận về { url, publicId }
 export async function uploadPoster(fetchWithAuth, file) {
   const body = new FormData()

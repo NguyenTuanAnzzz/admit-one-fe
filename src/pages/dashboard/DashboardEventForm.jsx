@@ -98,7 +98,7 @@ function TicketInput({ id, label, error, hint, className = '', ...props }) {
 }
 
 /** Loại vé của sự kiện: tên, giá, số lượng, mô tả. Backend bắt buộc ít nhất một loại */
-function TicketSection({ tickets, errors, onAdd, onUpdate, onRemove, isEdit, canAdd }) {
+function TicketSection({ tickets, errors, onAdd, onUpdate, onRemove, isEdit, canAdd, canDeleteSaved, onDeleteSaved, deletingKey }) {
   const totalQuantity = tickets.reduce((n, t) => n + (Number(t.quantity) || 0), 0)
   return (
     <section aria-labelledby="loai-ve" className="mt-8 border-t border-line pt-6">
@@ -109,7 +109,7 @@ function TicketSection({ tickets, errors, onAdd, onUpdate, onRemove, isEdit, can
           </h2>
           <p className="mt-1 text-body-sm text-fg-muted">
             {isEdit
-              ? 'Chỉ sửa được loại vé chưa mở bán. Loại vé đã lưu không xoá được.'
+              ? 'Chỉ sửa được loại vé chưa mở bán. Loại vé đã lưu chỉ xoá được khi sự kiện còn là bản nháp.'
               : 'Ít nhất một loại. Khách chọn loại vé và số lượng, không chọn ghế.'}
           </p>
         </div>
@@ -178,6 +178,18 @@ function TicketSection({ tickets, errors, onAdd, onUpdate, onRemove, isEdit, can
                 {(!isEdit || !t.id) && tickets.length > 1 && (
                   <button type="button" onClick={() => onRemove(t.key)} aria-label={`Xoá ${label}`} className="inline-flex min-h-11 items-center rounded-pill px-3 text-body-sm font-semibold text-danger hover:bg-danger-subtle">
                     Xoá
+                  </button>
+                )}
+                {/* Vé đã lưu: xoá thật ở backend ngay khi bấm, không đợi Lưu thay đổi */}
+                {isEdit && t.id && canDeleteSaved(t) && (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteSaved(t)}
+                    disabled={deletingKey === t.key}
+                    aria-label={`Xoá ${label}`}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-pill px-3 text-body-sm font-semibold text-danger hover:bg-danger-subtle disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {deletingKey === t.key ? 'Đang xoá...' : 'Xoá'}
                   </button>
                 )}
               </div>
@@ -328,6 +340,9 @@ export default function DashboardEventForm() {
             onRemove={form.removeTicket}
             isEdit={isEdit}
             canAdd={canAddTickets}
+            canDeleteSaved={form.canDeleteSavedTicket}
+            onDeleteSaved={form.deleteSavedTicket}
+            deletingKey={form.deletingKey}
           />
 
           <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
