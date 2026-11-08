@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { addTicket as addTicketApi, createEvent, deleteTicket as deleteTicketApi, getAdminEvent, updateEvent, updateTicket as updateTicketApi, uploadPoster } from '../api/eventApi'
 import { useAuth } from '../context/AuthContext'
+import { useConfirm } from '../context/ConfirmContext'
 import { hanoiParts } from '../lib/format'
 
 const EMPTY = { name: '', venue: '', address: '', googleMapsUrl: '', description: '', startsAt: '', saleOpensAt: '' }
@@ -113,6 +114,7 @@ function focusFirstError(errors) {
  */
 export default function useEventForm(eventId) {
   const { fetchWithAuth } = useAuth()
+  const confirm = useConfirm()
   const navigate = useNavigate()
   const [eventData, setEventData] = useState(null)
   const [values, setValues] = useState(EMPTY)
@@ -238,7 +240,13 @@ export default function useEventForm(eventId) {
   // Xoá loại vé đã lưu: gọi backend ngay (không đợi bấm Lưu) vì không hoàn tác được, hỏi xác nhận trước
   async function deleteSavedTicket(t) {
     const label = t.original?.name || t.name || 'loại vé này'
-    if (!window.confirm(`Xoá loại vé "${label}"? Không hoàn tác được.`)) return
+    const ok = await confirm({
+      title: `Xoá loại vé "${label}"?`,
+      message: 'Loại vé bị xoá hẳn khỏi sự kiện, không hoàn tác được.',
+      confirmLabel: 'Xoá loại vé',
+      tone: 'danger',
+    })
+    if (!ok) return
     setDeletingKey(t.key)
     setError((e) => ({ ...e, form: undefined }))
     try {
@@ -298,7 +306,11 @@ export default function useEventForm(eventId) {
 
     // Sự kiện đã công bố: khách đang thấy, hỏi lại trước khi lưu
     if (eventId && !isDraft) {
-      const ok = window.confirm('Sự kiện đã công bố, khách đang thấy. Thay đổi hiện ngay với khách, đổi giờ diễn hoặc địa điểm ảnh hưởng tới người đã mua vé. Lưu thay đổi?')
+      const ok = await confirm({
+        title: 'Lưu thay đổi cho sự kiện đã công bố?',
+        message: 'Khách đang thấy sự kiện này, thay đổi hiện ngay. Đổi giờ diễn hoặc địa điểm sẽ ảnh hưởng tới người đã mua vé.',
+        confirmLabel: 'Lưu thay đổi',
+      })
       if (!ok) return
     }
 

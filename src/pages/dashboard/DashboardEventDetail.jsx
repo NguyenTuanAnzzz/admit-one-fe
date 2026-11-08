@@ -5,6 +5,7 @@ import { PosterViewer } from '../../components/PosterViewer'
 import { Spinner } from '../../components/Spinner'
 import { getAdminEvent, publishEvent } from '../../api/eventApi'
 import { useAuth } from '../../context/AuthContext'
+import { useConfirm } from '../../context/ConfirmContext'
 import { EVENT_STATUS, EVENT_STATUS_LABEL, EVENT_STATUS_STYLE } from '../../lib/eventStatus'
 import { formatCount, formatMoney, hanoiParts } from '../../lib/format'
 
@@ -64,6 +65,7 @@ function TicketRow({ ticket, eventStatus }) {
 export default function DashboardEventDetail() {
   const { id } = useParams()
   const { fetchWithAuth } = useAuth()
+  const confirm = useConfirm()
   // key = id đã tải xong: đổi sự kiện thì tự coi là đang tải, không setState trong effect
   const [result, setResult] = useState({ key: null, event: null, error: null })
   const [reloadKey, setReloadKey] = useState(0)
@@ -103,7 +105,12 @@ export default function DashboardEventDetail() {
   }, [event])
 
   async function handlePublish() {
-    if (!window.confirm(`Công bố "${event.name}"? Khách sẽ thấy sự kiện này.`)) return
+    const ok = await confirm({
+      title: `Công bố "${event.name}"?`,
+      message: 'Khách sẽ thấy sự kiện này. Tới giờ mở bán hệ thống tự mở bán, sau đó không sửa được loại vé nữa.',
+      confirmLabel: 'Công bố',
+    })
+    if (!ok) return
     setPublishing(true)
     setNotice(null)
     try {

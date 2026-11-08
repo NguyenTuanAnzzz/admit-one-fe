@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { PosterViewer } from '../../components/PosterViewer'
 import { publishEvent } from '../../api/eventApi'
 import { useAuth } from '../../context/AuthContext'
+import { useConfirm } from '../../context/ConfirmContext'
 import useAdminEvents from '../../hook/useAdminEvents'
 import { EVENT_STATUS, EVENT_STATUS_LABEL, EVENT_STATUS_STYLE } from '../../lib/eventStatus'
 import { hanoiParts } from '../../lib/format'
@@ -103,12 +104,18 @@ export default function DashboardEvents() {
   const params = useMemo(() => ({ keyword: q, eventDate: show, saleDate: sale, page: page - 1, size: PAGE_SIZE }), [q, show, sale, page])
   const { data, error, loading, reload } = useAdminEvents(params)
   const { fetchWithAuth } = useAuth()
+  const confirm = useConfirm()
   // Sự kiện đang công bố (khoá nút của dòng đó) và thông báo kết quả ở đầu trang
   const [busyId, setBusyId] = useState(null)
   const [notice, setNotice] = useState(null)
 
   async function handlePublish(event) {
-    if (!window.confirm(`Công bố "${event.name}"? Khách sẽ thấy sự kiện này.`)) return
+    const ok = await confirm({
+      title: `Công bố "${event.name}"?`,
+      message: 'Khách sẽ thấy sự kiện này. Tới giờ mở bán hệ thống tự mở bán, sau đó không sửa được loại vé nữa.',
+      confirmLabel: 'Công bố',
+    })
+    if (!ok) return
     setBusyId(event.id)
     setNotice(null)
     try {
