@@ -39,7 +39,7 @@ export default function ProfilePage() {
             linkBase="/"
             onLogin={() => navigate('/login')}
             onLogout={logout}
-            onSearch={(q) => navigate('/#events', { state: { q } })}
+            onSearch={(q) => navigate(q ? `/events?keyword=${encodeURIComponent(q)}` : '/events')}
           />
 
           <main id="main-content" className="mx-auto w-full max-w-3xl flex-1 px-gutter py-section-sm">

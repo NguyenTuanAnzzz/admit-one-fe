@@ -20,6 +20,13 @@ export default function DashboardLayout() {
   const { user, logout } = useAuth()
   const items = DASHBOARD_NAV.filter((item) => item.roles.includes(user.role))
 
+  // Vào Dashboard từ trang cá nhân nên có nút quay về đó, nằm đầu menu
+  const back = (
+    <Link to="/profile" className={topLink}>
+      <span aria-hidden="true">←&nbsp;</span>Về trang cá nhân
+    </Link>
+  )
+
   const nav = (
     <ul className="flex flex-wrap gap-1 md:flex-col">
       <li>
@@ -60,6 +67,7 @@ export default function DashboardLayout() {
               </div>
             </div>
             <nav aria-label="Menu dashboard" className="border-t border-line px-gutter py-2 md:hidden">
+              <div className="mb-1">{back}</div>
               {nav}
             </nav>
           </header>
@@ -67,12 +75,8 @@ export default function DashboardLayout() {
           <div className="flex flex-1">
             <aside className="hidden w-60 shrink-0 border-r border-line bg-surface md:block">
               <nav aria-label="Menu dashboard" className="sticky top-[69px] p-3">
+                <div className="mb-3 border-b border-line pb-3">{back}</div>
                 {nav}
-                <div className="mt-4 border-t border-line pt-3">
-                  <Link to="/" className={topLink}>
-                    ← Về trang chủ
-                  </Link>
-                </div>
               </nav>
             </aside>
             <main id="main-content" className="min-w-0 flex-1 px-gutter py-8 md:px-10">

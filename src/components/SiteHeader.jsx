@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { NAV } from '../lib/nav'
-import { canUseDashboard } from '../lib/roles'
 import { HeaderLogo } from './HeaderLogo'
 
 const navLink = 'inline-flex min-h-11 items-center rounded-nav px-3 text-body-sm font-medium text-fg-muted hover:bg-surface-sunken hover:text-title'
@@ -80,12 +79,7 @@ export function SiteHeader({ user, authReady = true, linkBase = '', onLogin, onL
         <div className="order-2 ml-auto flex items-center gap-1 md:ml-0 lg:order-4">
           {user ? (
             <>
-              {canUseDashboard(user) && (
-                <Link to="/dashboard" className={`${navLink} hidden md:inline-flex`}>
-                  Dashboard
-                </Link>
-              )}
-              {/* Bấm avatar hoặc tên để vào trang cá nhân. Chữ ẩn dưới xl nên tên trang nằm ở aria-label */}
+              {/* Bấm avatar hoặc tên để vào trang cá nhân. Admin, Staff vào Dashboard từ trang cá nhân. Chữ ẩn dưới xl nên tên trang nằm ở aria-label */}
               <Link to="/profile" aria-label={`Trang cá nhân của ${user.name}`} className="inline-flex min-h-11 items-center gap-2 rounded-nav px-1 text-title hover:bg-surface-sunken xl:pr-3">
                 <span aria-hidden="true" className="inline-flex size-9 items-center justify-center rounded-full bg-avatar text-body-sm font-bold text-avatar-fg">
                   {user.initials}
@@ -129,13 +123,6 @@ export function SiteHeader({ user, authReady = true, linkBase = '', onLogin, onL
               <li className="mt-1 border-t border-line pt-1">
                 <Link to="/profile" onClick={() => setMenuOpen(false)} className={mobileLink}>
                   Trang cá nhân
-                </Link>
-              </li>
-            )}
-            {canUseDashboard(user) && (
-              <li>
-                <Link to="/dashboard" onClick={() => setMenuOpen(false)} className={mobileLink}>
-                  Dashboard
                 </Link>
               </li>
             )}

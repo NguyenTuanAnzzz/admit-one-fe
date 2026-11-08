@@ -1,3 +1,5 @@
+import { fromSpringPage } from '../lib/springPage'
+
 // Đổi địa chỉ backend trong file .env (VITE_API_URL), đã gồm /api ở cuối
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -23,21 +25,6 @@ export async function getAdminEvents(fetchWithAuth, params = {}) {
   const data = await res.json().catch(() => null)
   if (!res.ok) throw new Error(data?.message ?? 'Không tải được danh sách sự kiện.')
   return fromSpringPage(data)
-}
-
-/**
- * Spring trả Page theo một trong hai kiểu, tuỳ cấu hình:
- * { content, number, size, totalElements, totalPages } hoặc { content, page: { number, size, totalElements, totalPages } }.
- */
-function fromSpringPage(data) {
-  const meta = data?.page ?? data ?? {}
-  return {
-    items: data?.content ?? [],
-    page: meta.number ?? 0,
-    size: meta.size ?? 0,
-    totalItems: meta.totalElements ?? 0,
-    totalPages: meta.totalPages ?? 0,
-  }
 }
 
 // Chi tiết một sự kiện (kể cả bản nháp), để điền sẵn form sửa

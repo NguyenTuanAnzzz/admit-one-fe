@@ -22,7 +22,7 @@ export default function HowToBuyPage() {
       </div>
       <BuyingFlow />
       <div className="mx-auto max-w-page px-gutter pb-section-sm">
-        <Link to="/#events" className="inline-flex min-h-11 items-center font-semibold text-title underline underline-offset-4 hover:text-fg-muted">
+        <Link to="/events" className="inline-flex min-h-11 items-center font-semibold text-title underline underline-offset-4 hover:text-fg-muted">
           Xem sự kiện đang bán →
         </Link>
       </div>
