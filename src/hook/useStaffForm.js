@@ -67,12 +67,13 @@ export default function useStaffForm(staffId) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [staffId])
 
+  // Chỉ gán nhân viên cho sự kiện đã công bố và chưa huỷ (bản nháp có thể bị xoá, chưa có vé để soát).
   // Gõ tìm sự kiện: chờ ngừng gõ 300ms rồi mới gọi backend. Ô trống thì hiện các sự kiện mới tạo gần nhất
   useEffect(() => {
     let cancelled = false
     const id = setTimeout(() => {
       getAdminEvents(fetchWithAuth, { keyword: eventQuery.trim(), size: 8 })
-        .then((data) => !cancelled && setEventResults({ query: eventQuery, items: data.items.filter((e) => e.status !== 'CANCELLED'), error: null }))
+        .then((data) => !cancelled && setEventResults({ query: eventQuery, items: data.items.filter((e) => e.status !== 'CANCELLED' && e.status !== 'DRAFT'), error: null }))
         .catch((err) => !cancelled && setEventResults({ query: eventQuery, items: [], error: err.message }))
     }, 300)
     return () => {

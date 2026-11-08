@@ -108,6 +108,22 @@ export async function addTicket(fetchWithAuth, eventId, ticket) {
   return data
 }
 
+// Xoá hẳn một sự kiện cùng các loại vé: DELETE /admin/events/{id}, trả 204 không có body.
+// Backend chỉ cho xoá bản nháp (DRAFT), còn lại trả 409 kèm lý do
+export async function deleteEvent(fetchWithAuth, id) {
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/admin/events/${id}`, { method: 'DELETE' })
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null)
+    throw new Error(data?.message ?? 'Xoá sự kiện chưa thành công. Vui lòng thử lại.')
+  }
+}
+
 // Xoá hẳn một loại vé: DELETE /admin/events/{eventId}/tickets/{ticketId}, trả 204 không có body.
 // Backend chỉ cho xoá khi sự kiện còn DRAFT và loại vé chưa bán vé nào, sai thì 409 kèm lý do
 export async function deleteTicket(fetchWithAuth, eventId, ticketId) {

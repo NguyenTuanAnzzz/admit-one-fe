@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { PrimaryButton } from '../../components/Button'
 import { PosterViewer } from '../../components/PosterViewer'
 import { Spinner } from '../../components/Spinner'
-import { getAdminEvent, publishEvent } from '../../api/eventApi'
+import { deleteEvent, getAdminEvent, publishEvent } from '../../api/eventApi'
 import { useAuth } from '../../context/AuthContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import { EVENT_STATUS, EVENT_STATUS_LABEL, EVENT_STATUS_STYLE } from '../../lib/eventStatus'
@@ -70,6 +70,7 @@ export default function DashboardEventDetail() {
   const [result, setResult] = useState({ key: null, event: null, error: null })
   const [reloadKey, setReloadKey] = useState(0)
   const [publishing, setPublishing] = useState(false)
+  const [deleting, setDeleting] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   // Từ form sửa quay về kèm tên vừa lưu. Giữ vào state rồi xoá khỏi history để F5 không báo lại
@@ -122,6 +123,26 @@ export default function DashboardEventDetail() {
       setNotice({ type: 'error', text: err.message })
     } finally {
       setPublishing(false)
+    }
+  }
+
+  async function handleDelete() {
+    const ok = await confirm({
+      title: `Xoá sự kiện "${event.name}"?`,
+      message: 'Sự kiện và mọi loại vé của nó bị xoá hẳn, không hoàn tác được. Chỉ bản nháp mới xoá được.',
+      confirmLabel: 'Xoá sự kiện',
+      tone: 'danger',
+    })
+    if (!ok) return
+    setDeleting(true)
+    setNotice(null)
+    try {
+      await deleteEvent(fetchWithAuth, id)
+      // Sự kiện không còn nữa: về danh sách, danh sách báo "Đã xoá ..."
+      navigate('/dashboard/events', { replace: true, state: { deleted: event.name } })
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message })
+      setDeleting(false)
     }
   }
 
@@ -183,7 +204,17 @@ export default function DashboardEventDetail() {
                 </Link>
               )}
               {event.status === EVENT_STATUS.DRAFT && (
-                <PrimaryButton type="button" disabled={publishing} onClick={handlePublish}>
+                <button
+                  type="button"
+                  disabled={deleting || publishing}
+                  onClick={handleDelete}
+                  className="inline-flex min-h-11 items-center rounded-pill px-4 text-body-sm font-semibold text-danger hover:bg-danger-subtle disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {deleting ? 'Đang xoá...' : 'Xoá sự kiện'}
+                </button>
+              )}
+              {event.status === EVENT_STATUS.DRAFT && (
+                <PrimaryButton type="button" disabled={publishing || deleting} onClick={handlePublish}>
                   {publishing && <Spinner />}
                   {publishing ? 'Đang công bố...' : 'Công bố'}
                 </PrimaryButton>

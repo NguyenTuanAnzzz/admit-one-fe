@@ -301,7 +301,6 @@ export default function useEventForm(eventId) {
       posterUrl: poster.url,
       startsAt: hanoiToIso(values.startsAt),
       saleOpensAt: hanoiToIso(values.saleOpensAt),
-      tickets: ticketPayload,
     }
 
     // Sự kiện đã công bố: khách đang thấy, hỏi lại trước khi lưu
@@ -352,11 +351,13 @@ export default function useEventForm(eventId) {
           setTickets((list) => list.map((x) => (x.key === t.key ? { ...x, id: created.id, status: created.status } : x)))
         }
 
+        // PUT nhận UpdateEventRequest (không có tickets): vé đã lưu ở các bước trên qua API vé riêng
         const data = await updateEvent(fetchWithAuth, eventId, payload)
         // Trang chi tiết đọc state này để báo "Đã lưu ..." ở đầu trang
         navigate(`/dashboard/events/${eventId}`, { state: { saved: data.name } })
       } else {
-        const data = await createEvent(fetchWithAuth, payload)
+        // Tạo thì gửi vé cùng lúc trong EventRequest
+        const data = await createEvent(fetchWithAuth, { ...payload, tickets: ticketPayload })
         // Danh sách đọc state này để báo "Đã tạo ..." ở đầu trang
         navigate('/dashboard/events', { state: { saved: data.name, created: true } })
       }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { PosterViewer } from '../../components/PosterViewer'
-import { publishEvent } from '../../api/eventApi'
+import { deleteEvent, publishEvent } from '../../api/eventApi'
 import { useAuth } from '../../context/AuthContext'
 import { useConfirm } from '../../context/ConfirmContext'
 import useAdminEvents from '../../hook/useAdminEvents'
@@ -21,7 +21,7 @@ const pageButton = (active) =>
 const PAGE_SIZE = 10
 
 // Cột của hàng tiêu đề và từng dòng phải giống nhau để thẳng hàng: poster, tên, giờ diễn, mở bán, trạng thái, nút
-const ROW_COLUMNS = 'xl:grid-cols-[56px_minmax(0,1fr)_130px_130px_100px_170px]'
+const ROW_COLUMNS = 'xl:grid-cols-[56px_minmax(0,1fr)_130px_130px_100px_250px]'
 const rowPrimary =
   'inline-flex min-h-11 items-center gap-2 rounded-pill border-[1.5px] border-button-primary bg-button-primary px-4 text-body-sm font-semibold text-button-primary-fg hover:border-button-primary-hover hover:bg-button-primary-hover disabled:cursor-not-allowed disabled:opacity-60'
 
@@ -30,7 +30,7 @@ const formatHanoi = (iso) => {
   return `${p.time} · ${p.day}/${p.month}/${p.year}`
 }
 
-function EventRow({ event, busy, onPublish }) {
+function EventRow({ event, busy, deleting, onPublish, onDelete }) {
   const canEdit = event.status !== EVENT_STATUS.CANCELLED && (!event.startsAt || new Date(event.startsAt) > new Date())
 
   return (
@@ -80,6 +80,18 @@ function EventRow({ event, busy, onPublish }) {
             {busy ? 'Đang công bố...' : 'Công bố'}
           </button>
         )}
+        {/* Chỉ bản nháp mới xoá được (khách chưa thấy, chưa ai mua). Sự kiện đã công bố thì phải huỷ */}
+        {event.status === EVENT_STATUS.DRAFT && (
+          <button
+            type="button"
+            disabled={busy || deleting}
+            onClick={() => onDelete(event)}
+            aria-label={`Xoá ${event.name}`}
+            className="inline-flex min-h-11 items-center rounded-pill px-3 text-body-sm font-semibold text-danger hover:bg-danger-subtle disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {deleting ? 'Đang xoá...' : 'Xoá'}
+          </button>
+        )}
       </div>
     </li>
   )
@@ -107,6 +119,7 @@ export default function DashboardEvents() {
   const confirm = useConfirm()
   // Sự kiện đang công bố (khoá nút của dòng đó) và thông báo kết quả ở đầu trang
   const [busyId, setBusyId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
   const [notice, setNotice] = useState(null)
 
   async function handlePublish(event) {
@@ -129,6 +142,29 @@ export default function DashboardEvents() {
       setBusyId(null)
     }
   }
+  async function handleDelete(event) {
+    const ok = await confirm({
+      title: `Xoá sự kiện "${event.name}"?`,
+      message: 'Sự kiện và mọi loại vé của nó bị xoá hẳn, không hoàn tác được. Chỉ bản nháp mới xoá được.',
+      confirmLabel: 'Xoá sự kiện',
+      tone: 'danger',
+    })
+    if (!ok) return
+    setDeletingId(event.id)
+    setNotice(null)
+    try {
+      await deleteEvent(fetchWithAuth, event.id)
+      setNotice({ type: 'success', text: `Đã xoá ${event.name}.` })
+      // Xoá dòng cuối của một trang (không phải trang 1) thì lùi về trang trước, không để trang trống
+      if (items.length === 1 && page > 1) update({ page: String(page - 1) })
+      else reload()
+    } catch (err) {
+      setNotice({ type: 'error', text: err.message })
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   // Ô tìm kiếm gõ tới đâu hiện tới đó, nhưng chỉ gọi backend khi ngừng gõ 400ms
   const [qInput, setQInput] = useState(q)
   useEffect(() => {
@@ -153,9 +189,10 @@ export default function DashboardEvents() {
 
   // Từ trang sửa quay về kèm tên sự kiện vừa lưu. Giữ vào state rồi xoá khỏi history để F5 không báo lại
   const [savedName] = useState(() => location.state?.saved ?? null)
+  const [deletedName] = useState(() => location.state?.deleted ?? null)
   const [justCreated] = useState(() => Boolean(location.state?.created))
   useEffect(() => {
-    if (location.state?.saved) navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
+    if (location.state?.saved || location.state?.deleted) navigate(`${location.pathname}${location.search}`, { replace: true, state: null })
   }, [location, navigate])
 
   useEffect(() => {
@@ -189,6 +226,12 @@ export default function DashboardEvents() {
           className={`mt-6 rounded-input px-4 py-3 text-body-sm ${notice.type === 'error' ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-fg'}`}
         >
           {notice.text}
+        </p>
+      )}
+
+      {deletedName && (
+        <p role="status" className="mt-6 rounded-input bg-success-subtle px-4 py-3 text-body-sm text-fg">
+          Đã xoá <span className="font-semibold">{deletedName}</span>.
         </p>
       )}
 
@@ -284,7 +327,7 @@ export default function DashboardEvents() {
         {!error && items.length > 0 && (
           <ul>
             {items.map((event) => (
-              <EventRow key={event.id} event={event} busy={busyId === event.id} onPublish={handlePublish} />
+              <EventRow key={event.id} event={event} busy={busyId === event.id} deleting={deletingId === event.id} onPublish={handlePublish} onDelete={handleDelete} />
             ))}
           </ul>
         )}
