@@ -1,5 +1,4 @@
-/** Các mảnh giao diện dùng lại (nút nằm ở Button.jsx, ô nhập ở TextField.jsx): tiêu đề section, nhãn trạng thái, đường răng cưa của vé. */
-import { STATUS, STATUS_LABEL } from '../lib/api'
+/** Các mảnh giao diện dùng lại (nút nằm ở Button.jsx, ô nhập ở TextField.jsx): tiêu đề section, đường răng cưa của vé, mã QR minh hoạ. */
 
 export function SectionHeading({ id, title, children }) {
   return (
@@ -9,21 +8,6 @@ export function SectionHeading({ id, title, children }) {
       </h2>
       {children}
     </div>
-  )
-}
-
-const STATUS_STYLE = {
-  [STATUS.ON_SALE]: 'bg-status-on-sale text-status-on-sale-fg',
-  [STATUS.UPCOMING]: 'bg-status-upcoming text-status-upcoming-fg',
-  [STATUS.SOLD_OUT]: 'bg-status-sold-out text-status-sold-out-fg',
-}
-
-/** Nhãn trạng thái: xanh lá đang bán, cam nhạt sắp mở, xám hết vé. Trạng thái nằm trong chữ, không chỉ dựa vào màu. */
-export function StatusBadge({ status, className = '' }) {
-  return (
-    <span className={`inline-flex items-center rounded-badge px-2.5 py-1 text-caption font-semibold ${STATUS_STYLE[status]} ${className}`}>
-      {STATUS_LABEL[status]}
-    </span>
   )
 }
 

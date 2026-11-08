@@ -83,3 +83,13 @@
     transform: translateX(calc(-50% - 0.375rem));
   }
 }
+
+/* Thanh chạy trên chấm đang chọn ở đầu trang chủ (Hero): đầy dần trong đúng thời gian một sự kiện đứng trên màn hình */
+@keyframes hero-progress {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}

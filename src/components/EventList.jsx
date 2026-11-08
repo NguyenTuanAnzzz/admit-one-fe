@@ -1,17 +1,19 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { AnimatePresence, m } from 'framer-motion'
-import { STATUS, STATUS_LABEL, fetchEvents } from '../lib/api'
-import { formatCount, formatDuration, formatMoney, hanoiParts, secondsUntil, useNow } from '../lib/format'
+import { getPublicEvents } from '../api/publicEventApi'
+import { EVENT_STATUS, EVENT_STATUS_LABEL, EVENT_STATUS_STYLE } from '../lib/eventStatus'
+import { formatDuration, formatMoney, hanoiParts, secondsUntil, useNow } from '../lib/format'
 import { EASE_OUT } from '../lib/motion'
 import { GhostButton } from './Button'
-import { Perforation, SectionHeading, StatusBadge } from './ui'
+import { FloatingNote, Mascot } from './Mascot'
+import { Perforation, SectionHeading } from './ui'
 
-const FILTERS = [
-  { id: 'tat-ca', label: 'Tất cả' },
-  { id: STATUS.ON_SALE, label: STATUS_LABEL[STATUS.ON_SALE] },
-  { id: STATUS.UPCOMING, label: STATUS_LABEL[STATUS.UPCOMING] },
-  { id: STATUS.SOLD_OUT, label: STATUS_LABEL[STATUS.SOLD_OUT] },
-]
+// Số thẻ trên trang chủ. Xem hết ở /events
+const LIMIT = 8
+
+// '' là tất cả. Lọc ở backend qua tham số status của GET /api/events
+const FILTERS = ['', EVENT_STATUS.ON_SALE, EVENT_STATUS.UPCOMING, EVENT_STATUS.SOLD_OUT]
 
 /**
  * Thẻ hiện lần lượt ngay khi được gắn vào trang (lúc tải và mỗi lần đổi bộ lọc), mờ đi khi bị bộ lọc loại ra.
@@ -23,104 +25,104 @@ const cardMotion = {
   exit: { opacity: 0, scale: 0.96, transition: { duration: 0.18 } },
 }
 
-const normalize = (s) => s.normalize('NFD').replace(/\p{M}/gu, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()
+const seeAllLink = 'inline-flex min-h-11 items-center font-semibold text-title underline underline-offset-4 hover:text-fg-muted'
 
-/** Lưới thẻ sự kiện kiểu sàn thương mại: lọc theo trạng thái (C-02) và theo từ khóa tìm kiếm ở header. */
-export function EventList({ query, onClearQuery }) {
-  const [state, setState] = useState({ status: 'loading', events: [], error: null })
-  const [filter, setFilter] = useState('tat-ca')
-  const [openId, setOpenId] = useState(null)
+/** Lưới sự kiện trên trang chủ (C-02): sự kiện đã công bố từ GET /api/events, lọc theo trạng thái ở backend. */
+export function EventList() {
+  const [filter, setFilter] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
+  // key = bộ lọc đã tải xong: đổi bộ lọc thì tự coi là đang tải, không phải setState trong effect
+  const [result, setResult] = useState({ key: null, events: [], error: null })
   const now = useNow()
 
-  const request = useCallback(() => {
-    fetchEvents()
-      .then((events) => setState({ status: 'ready', events, error: null }))
-      .catch((error) => setState({ status: 'error', events: [], error }))
-  }, [])
+  const key = `${filter}#${reloadKey}`
 
   useEffect(() => {
-    request()
-  }, [request])
+    let cancelled = false
+    getPublicEvents({ status: filter, page: 0, size: LIMIT })
+      .then((data) => !cancelled && setResult({ key, events: data.items, error: null }))
+      .catch((err) => !cancelled && setResult({ key, events: [], error: err.message }))
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
 
-  const retry = () => {
-    setState({ status: 'loading', events: [], error: null })
-    request()
-  }
-
-  const q = normalize(query)
-  const visible = state.events.filter(
-    (e) => (filter === 'tat-ca' || e.status === filter) && (!q || normalize(`${e.title} ${e.venue} ${e.address}`).includes(q)),
-  )
-
-  const clearAll = () => {
-    setFilter('tat-ca')
-    onClearQuery()
-  }
+  // Đang tải bộ lọc mới vẫn giữ thẻ cũ (làm mờ) để lưới không nháy trắng
+  const loading = result.key !== key
+  const firstLoad = loading && result.key === null
+  const { events, error } = result
 
   return (
     <section id="events" aria-labelledby="events-tieu-de" className="px-gutter py-section-sm md:py-section">
       <div className="mx-auto max-w-page">
-        <SectionHeading id="events-tieu-de" title="Sự kiện nổi bật">
+        <SectionHeading
+          id="events-tieu-de"
+          title={
+            <span className="inline-flex items-end gap-2">
+              {/* Linh vật ca sĩ đứng cạnh tiêu đề, chỉ trang trí */}
+              <Mascot pose="singer" className="-mb-1 h-20 w-auto shrink-0 md:h-24" />
+              Sự kiện nổi bật
+              <FloatingNote delay={0.6} className="mb-8 hidden w-6 sm:block" />
+            </span>
+          }
+        >
           <div role="group" aria-label="Lọc theo trạng thái" className="flex flex-wrap gap-2">
-            {FILTERS.map((f) => (
+            {FILTERS.map((s) => (
               <button
-                key={f.id}
+                key={s || 'all'}
                 type="button"
-                aria-pressed={filter === f.id}
-                onClick={() => setFilter(f.id)}
-                className="min-h-11 rounded-pill border border-line bg-surface px-5 text-body-sm font-semibold text-fg transition-colors hover:border-fg hover:underline aria-pressed:border-action aria-pressed:border-chip-active-line aria-pressed:bg-chip-active aria-pressed:text-chip-active-fg"
+                aria-pressed={filter === s}
+                onClick={() => setFilter(s)}
+                className="min-h-11 rounded-pill border border-line bg-surface px-5 text-body-sm font-semibold text-fg transition-colors hover:border-fg hover:underline aria-pressed:border-chip-active-line aria-pressed:bg-chip-active aria-pressed:text-chip-active-fg"
               >
-                {f.label}
+                {s ? EVENT_STATUS_LABEL[s] : 'Tất cả'}
               </button>
             ))}
           </div>
         </SectionHeading>
 
-        {query && (
-          <p className="mt-4 flex flex-wrap items-center gap-2 text-body-sm text-fg-muted">
-            Kết quả cho “<span className="font-semibold text-fg">{query}</span>”
-            <button type="button" onClick={onClearQuery} className="min-h-11 rounded-input px-2 font-semibold text-title underline underline-offset-4 hover:text-fg-muted">
-              Xóa từ khóa
-            </button>
-          </p>
-        )}
+        <div className={`mt-6 transition-opacity ${loading && !firstLoad ? 'opacity-60' : ''}`} aria-live="polite" aria-busy={loading}>
+          {firstLoad && <LoadingCards />}
 
-        <div className="mt-6" aria-live="polite" aria-busy={state.status === 'loading'}>
-          {state.status === 'loading' && <LoadingCards />}
-
-          {state.status === 'error' && (
+          {!loading && error && (
             <div className="rounded-card border border-card-line bg-card px-6 py-10 text-center">
-              <p className="text-subheading font-semibold text-title">{state.error.message}</p>
+              <p className="text-subheading font-semibold text-title">{error}</p>
               <p className="mt-2 text-body text-fg-muted">Kiểm tra kết nối mạng rồi thử lại. Vé bạn đang giữ (nếu có) không bị ảnh hưởng.</p>
-              <GhostButton type="button" onClick={retry} className="mt-6">
+              <GhostButton type="button" onClick={() => setReloadKey((k) => k + 1)} className="mt-6">
                 Tải lại danh sách
               </GhostButton>
             </div>
           )}
 
-          {state.status === 'ready' && visible.length === 0 && (
+          {!firstLoad && !error && events.length === 0 && (
             <div className="rounded-card border border-card-line bg-card px-6 py-10 text-center">
-              <p className="text-subheading font-semibold text-title">Không có sự kiện phù hợp</p>
-              <p className="mt-2 text-body text-fg-muted">Thử từ khóa khác hoặc bỏ bộ lọc. Lịch mới thường được công bố trước ngày mở bán ít nhất hai tuần.</p>
-              <GhostButton type="button" onClick={clearAll} className="mt-6">
-                Xem tất cả sự kiện
-              </GhostButton>
+              <Mascot pose="ticket" className="mx-auto h-28 w-auto" />
+              <p className="mt-2 text-subheading font-semibold text-title">{filter ? `Chưa có sự kiện ${EVENT_STATUS_LABEL[filter].toLowerCase()}` : 'Chưa có sự kiện nào được công bố'}</p>
+              <p className="mt-2 text-body text-fg-muted">Lịch mới thường được công bố trước ngày mở bán ít nhất hai tuần.</p>
+              {filter && (
+                <GhostButton type="button" onClick={() => setFilter('')} className="mt-6">
+                  Xem tất cả sự kiện
+                </GhostButton>
+              )}
             </div>
           )}
 
-          {state.status === 'ready' && visible.length > 0 && (
+          {!firstLoad && !error && events.length > 0 && (
             <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               <AnimatePresence mode="popLayout">
-                {visible.map((e, i) => (
-                  <EventCard key={e.id} index={i} event={e} now={now} open={openId === e.id} onToggle={() => setOpenId(openId === e.id ? null : e.id)} />
+                {events.map((e, i) => (
+                  <EventCard key={e.id} index={i} event={e} now={now} />
                 ))}
               </AnimatePresence>
             </ul>
           )}
 
-          {state.status === 'ready' && (
-            <p className="mt-5 text-body-sm text-fg-muted">
-              Ba sự kiện sau VŨ. Live Concert là dữ liệu mẫu để thử bộ lọc, sẽ được thay bằng dữ liệu thật từ hệ thống.
+          {!firstLoad && !error && (
+            <p className="mt-6 text-right">
+              <Link to={filter ? `/events?status=${filter}` : '/events'} className={seeAllLink}>
+                Xem tất cả sự kiện →
+              </Link>
             </p>
           )}
         </div>
@@ -129,12 +131,11 @@ export function EventList({ query, onClearQuery }) {
   )
 }
 
-function EventCard({ ref, index, event: e, now, open, onToggle }) {
+function EventCard({ ref, index, event: e, now }) {
   const d = hanoiParts(e.startsAt)
-  const sale = hanoiParts(e.saleOpensAt)
   const untilSale = secondsUntil(e.saleOpensAt, now)
-  const soldOut = e.status === STATUS.SOLD_OUT
-  const panelId = `chi-tiet-${e.id}`
+  const soldOut = e.status === EVENT_STATUS.SOLD_OUT
+  const price = e.priceFrom != null ? formatMoney(Number(e.priceFrom)) : null
 
   return (
     <m.li
@@ -145,11 +146,11 @@ function EventCard({ ref, index, event: e, now, open, onToggle }) {
       animate="show"
       exit="exit"
       whileHover={{ y: -4, transition: { type: 'spring', stiffness: 400, damping: 26 } }}
-      className="flex flex-col overflow-hidden rounded-card border border-card-line bg-card transition-shadow hover:border-card-line-hover hover:shadow-card-hover"
+      className="relative flex flex-col overflow-hidden rounded-card border border-card-line bg-card transition-shadow focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus hover:border-card-line-hover hover:shadow-card-hover"
     >
       <div className="relative">
-        {e.poster ? (
-          <img src={e.poster} alt="" width="1024" height="1024" loading="lazy" className="aspect-[4/3] w-full object-cover" />
+        {e.posterUrl ? (
+          <img src={e.posterUrl} alt="" width="1024" height="1024" loading="lazy" className="aspect-[4/3] w-full object-cover" />
         ) : (
           // Sự kiện chưa có poster: một cuống vé in ngày diễn, cùng mô-típ vé giấy với logo và phiếu giữ vé
           <div aria-hidden="true" className="flex aspect-[4/3] w-full items-center justify-center bg-surface-sunken">
@@ -167,20 +168,27 @@ function EventCard({ ref, index, event: e, now, open, onToggle }) {
             </div>
           </div>
         )}
-        <StatusBadge status={e.status} className="absolute top-4 left-5" />
+        <span className={`absolute top-4 left-5 inline-flex items-center rounded-badge px-2.5 py-1 text-caption font-semibold ${EVENT_STATUS_STYLE[e.status] ?? ''}`}>
+          {EVENT_STATUS_LABEL[e.status] ?? e.status}
+        </span>
       </div>
 
       <Perforation notchClass="bg-canvas" />
 
       <div className="flex flex-1 flex-col px-5 pt-2 pb-5">
-        <h3 className={`font-display text-heading-sm font-bold ${soldOut ? 'text-fg-muted' : 'text-title'}`}>{e.title}</h3>
+        {/* Tên là link duy nhất của thẻ; lớp after phủ cả thẻ nên bấm chỗ nào trên thẻ cũng mở trang chi tiết */}
+        <h3 className={`font-display text-heading-sm font-bold ${soldOut ? 'text-fg-muted' : 'text-title'}`}>
+          <Link to={`/events/${e.id}`} className="after:absolute after:inset-0 hover:underline focus-visible:outline-none">
+            {e.name}
+          </Link>
+        </h3>
         <p className="mt-1 text-body-sm text-fg">
-          {d.time}, {d.weekday} {d.day}/{d.month}
+          {d.time}, {d.weekday} {d.day}/{d.month}/{d.year}
         </p>
         <p className="text-body-sm text-fg">{e.venue}</p>
 
         <div className="mt-auto flex items-end justify-between gap-3 pt-4">
-          {e.status === STATUS.UPCOMING ? (
+          {e.status === EVENT_STATUS.UPCOMING && untilSale > 0 ? (
             <div className="text-body-sm">
               <p className="text-fg-muted">Mở bán sau</p>
               <p className="font-display text-subheading font-bold text-title tabular-nums">{formatDuration(untilSale)}</p>
@@ -188,52 +196,13 @@ function EventCard({ ref, index, event: e, now, open, onToggle }) {
           ) : (
             <div className="text-body-sm">
               <p className="text-fg-muted">Giá từ</p>
-              <p className={`font-display text-subheading font-bold tabular-nums ${soldOut ? 'text-fg-muted line-through' : 'text-action'}`}>{formatMoney(e.priceFrom)}</p>
+              <p className={`font-display text-subheading font-bold tabular-nums ${soldOut ? 'text-fg-muted line-through' : 'text-action'}`}>{price ?? 'Đang cập nhật'}</p>
             </div>
           )}
-          <button
-            type="button"
-            onClick={onToggle}
-            aria-expanded={open}
-            aria-controls={panelId}
-            className="inline-flex min-h-11 shrink-0 items-center gap-1 rounded-pill px-3 text-body-sm font-semibold text-fg underline underline-offset-4 hover:text-title"
-          >
-            {open ? 'Thu gọn' : 'Chi tiết'}
-            <svg aria-hidden="true" viewBox="0 0 16 16" className={`size-4 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-              <path d="m4 6 4 4 4-4" />
-            </svg>
-          </button>
+          <span aria-hidden="true" className="inline-flex min-h-11 shrink-0 items-center gap-1 px-1 text-body-sm font-semibold text-fg underline underline-offset-4">
+            Chi tiết →
+          </span>
         </div>
-
-        {open && (
-          <div id={panelId} className="mt-3 border-t border-line pt-3">
-            <dl className="space-y-2 text-body-sm">
-              <div>
-                <dt className="text-fg-muted">Địa chỉ</dt>
-                <dd>{e.address}</dd>
-              </div>
-              <div>
-                <dt className="text-fg-muted">Giá vé</dt>
-                <dd>
-                  {formatMoney(e.priceFrom)} đến {formatMoney(e.priceTo)}, {formatCount(e.seats)} vé
-                </dd>
-              </div>
-              <div>
-                <dt className="text-fg-muted">{untilSale > 0 ? 'Giờ mở bán' : 'Đã mở bán từ'}</dt>
-                <dd>
-                  {sale.time}, {sale.day}/{sale.month}/{sale.year}
-                </dd>
-              </div>
-            </dl>
-            {e.featured ? (
-              <a href="/events" className="mt-3 inline-flex min-h-11 items-center text-body-sm font-semibold text-title underline underline-offset-4 hover:text-fg-muted">
-                Xem giá vé
-              </a>
-            ) : (
-              <p className="mt-3 text-body-sm text-fg-muted">Trang chi tiết của sự kiện này chưa được dựng trong bản demo.</p>
-            )}
-          </div>
-        )}
       </div>
     </m.li>
   )

@@ -1,12 +1,16 @@
 import { Link } from 'react-router-dom'
 import { NAV } from '../lib/nav'
+import { Mascot } from './Mascot'
 
 export function SiteFooter() {
   return (
     <footer className="border-t border-line px-gutter py-10">
       <div className="mx-auto flex max-w-page flex-col gap-8 md:flex-row md:items-start md:justify-between">
         <div className="max-w-sm">
-          <p className="font-display text-heading-sm font-extrabold text-brand">admit one</p>
+          <p className="flex items-end gap-2 font-display text-heading-sm font-extrabold text-brand">
+            <Mascot pose="ticket" className="h-12 w-auto" />
+            admit one
+          </p>
           <p className="mt-2 text-body-sm text-fg-muted">
             Vé điện tử có mã QR cho concert, kịch và lễ hội trên khắp Việt Nam. Thanh toán đang chạy ở chế độ thử nghiệm của VNPay và MoMo.
           </p>
@@ -24,7 +28,7 @@ export function SiteFooter() {
           </ul>
         </nav>
       </div>
-      <p className="mx-auto mt-8 max-w-page text-body-sm text-fg-muted">© 2026 Admit One. Số liệu, đối tác và sự kiện trên trang chủ là dữ liệu mẫu.</p>
+      <p className="mx-auto mt-8 max-w-page text-body-sm text-fg-muted">© 2026 Admit One. Số liệu và đối tác trên trang chủ là dữ liệu mẫu.</p>
     </footer>
   )
 }

@@ -18,7 +18,7 @@ export const EVENT_STATUS_LABEL = {
   [EVENT_STATUS.CANCELLED]: 'Đã huỷ',
 }
 
-// Cùng màu với nhãn trạng thái ở trang chủ (StatusBadge), thêm bản nháp và đã huỷ
+// Màu nhãn trạng thái dùng chung cho trang khách và dashboard
 export const EVENT_STATUS_STYLE = {
   [EVENT_STATUS.DRAFT]: 'border border-badge-line bg-badge text-badge-fg',
   [EVENT_STATUS.PUBLISHED]: 'bg-status-on-sale text-status-on-sale-fg',

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { LazyMotion, MotionConfig, domAnimation } from 'framer-motion'
 import { SiteHeader } from '../components/SiteHeader'
@@ -14,8 +14,6 @@ export default function HomePage() {
   const { user, loading, logout } = useAuth()
 
   const location = useLocation()
-  // Từ khoá lọc danh sách mẫu trên trang chủ (EventList). Tìm ở header thì sang trang /events có dữ liệu thật
-  const [query, setQuery] = useState('')
 
   // Link tới #mục từ trang khác: về trang chủ với #mục, cuộn tới mục đó sau khi trang hiện ra
   useEffect(() => {
@@ -40,7 +38,7 @@ export default function HomePage() {
           <SiteHeader user={user} authReady={!loading} onLogin={openLogin} onLogout={logout} onSearch={search} />
           <main id="main-content">
             <Hero />
-            <EventList query={query} onClearQuery={() => setQuery('')} />
+            <EventList />
             <Partners />
             <BuyingFlow />
             <Faq />

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { animate, m, useInView, useReducedMotion } from 'framer-motion'
 import { EASE_OUT, fadeUp, inView } from '../lib/motion'
+import { FloatingNote, FloatingTicket, Mascot } from './Mascot'
 
 // Dữ liệu mẫu cho trang chủ (footer có ghi rõ). Khi có dashboard thống kê thì lấy số thật từ backend.
 // to: số đích, decimals: số chữ số sau dấu phẩy, suffix: chữ đi sau số
@@ -89,13 +90,21 @@ export function Partners() {
   return (
     <section aria-labelledby="doi-tac-tieu-de" className="px-gutter pb-section-sm md:pb-section">
       <div className="mx-auto max-w-page overflow-hidden rounded-card border border-card-line bg-surface px-5 py-8 sm:px-8 md:py-10">
-        <div className="max-w-2xl">
-          <h2 id="doi-tac-tieu-de" className="font-display text-heading-sm font-bold text-title md:text-heading">
-            Nơi ban tổ chức chọn để bán vé
-          </h2>
-          <p className="mt-2 text-body text-fg-muted">
-            Từ đêm nhạc vài trăm khách tới lễ hội hàng chục nghìn người, vé được giữ đúng 10 phút, thanh toán xong là có mã QR.
-          </p>
+        <div className="flex items-end justify-between gap-6">
+          <div className="max-w-2xl">
+            <h2 id="doi-tac-tieu-de" className="font-display text-heading-sm font-bold text-title md:text-heading">
+              Nơi ban tổ chức chọn để bán vé
+            </h2>
+            <p className="mt-2 text-body text-fg-muted">Từ đêm nhạc vài trăm khách tới lễ hội hàng chục nghìn người, vé được giữ đúng 10 phút, thanh toán xong là có mã QR.</p>
+          </div>
+          {/* Ban nhạc người que bên phải tiêu đề, chỉ hiện ở màn rộng để không chiếm chỗ trên điện thoại */}
+          <div aria-hidden="true" className="relative hidden shrink-0 items-end lg:flex">
+            <FloatingTicket color="salmon" rotate={18} delay={0.4} className="absolute -top-6 -left-14 w-14" />
+            <FloatingNote delay={1.1} className="absolute -top-8 left-1/2 w-6" />
+            <Mascot pose="dancer" delay={0.3} className="h-36 w-auto" />
+            <Mascot pose="drummer" delay={0.9} className="-ml-4 h-36 w-auto" />
+            <FloatingTicket rotate={-14} delay={1.4} className="absolute -right-4 -bottom-1 w-12" />
+          </div>
         </div>
 
         {/* Cả lưới hiện một lần: hiện từng ô thì nền xám làm đường kẻ giữa các ô lộ ra như ô trống trong lúc chờ */}

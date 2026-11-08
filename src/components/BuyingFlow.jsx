@@ -5,6 +5,7 @@ import { formatMinutes, formatMoney } from '../lib/format'
 import { fadeUp, inView, stagger } from '../lib/motion'
 import { GhostButton } from './Button'
 import { Perforation } from './ui'
+import { FloatingNote, FloatingTicket, Mascot } from './Mascot'
 
 const STEPS = [
   {
@@ -50,6 +51,13 @@ export function BuyingFlow() {
               </m.li>
             ))}
           </m.ol>
+          {/* Cuối hành trình mua vé: linh vật giơ vé, bạn chơi guitar bên cạnh */}
+          <div aria-hidden="true" className="relative mt-6 hidden items-end gap-1 md:flex">
+            <Mascot pose="guitarist" delay={0.2} className="h-32 w-auto" />
+            <Mascot pose="ticket" delay={0.7} className="h-32 w-auto" />
+            <FloatingNote delay={0.4} className="mb-20 w-7" />
+            <FloatingTicket color="salmon" rotate={12} delay={1} className="mb-14 ml-2 w-14" />
+          </div>
         </div>
 
         <HoldReceipt />
