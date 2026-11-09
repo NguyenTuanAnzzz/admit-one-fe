@@ -1,11 +1,14 @@
 import { useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { GhostButton, PrimaryButton } from '../components/Button'
 import { PosterViewer } from '../components/PosterViewer'
 import { Spinner } from '../components/Spinner'
+import { useAuth } from '../context/AuthContext'
+import useCreateOrder from '../hook/useCreateOrder'
 import useEventDetail from '../hook/useEventDetail'
 import { EVENT_STATUS_LABEL, EVENT_STATUS_STYLE } from '../lib/eventStatus'
-import { formatCount, formatDuration, formatMoney, hanoiParts, secondsUntil, useNow } from '../lib/format'
+import { formatCount, formatDuration, formatMinutes, formatMoney, hanoiParts, secondsUntil, useNow } from '../lib/format'
+import { ROLE } from '../lib/roles'
 
 const card = 'rounded-card border border-card-line bg-card p-card'
 const textLink = 'inline-flex min-h-11 items-center font-semibold text-title underline underline-offset-4 hover:text-fg-muted'
@@ -37,13 +40,31 @@ function saleMessage(event, untilSale) {
 
 /**
  * Trang chi tiết sự kiện cho khách (C-03, C-04, C-05): thông tin, đếm ngược tới giờ mở bán, chọn hạng vé và số lượng.
- * Header và footer do PublicLayout lo. Giữ vé (giai đoạn 2, Redis) chưa làm nên nút Giữ vé ghi rõ "sắp có".
+ * Header và footer do PublicLayout lo. Giữ vé = tạo đơn PENDING (POST /orders), chỉ tài khoản CUSTOMER.
  */
 export default function EventDetailPage() {
   const { id } = useParams()
   const now = useNow()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const { user, loading: authLoading } = useAuth()
   const detail = useEventDetail(id)
   const { loading, error, notFound, reload, event, tiers, canSelect, canPick, maxTickets, counts, totalCount, maxFor, setCount, clearSelection, selected, total } = detail
+  const hold = useCreateOrder()
+  const isCustomer = user?.role === ROLE.CUSTOMER
+
+  async function handleHold() {
+    if (!user) {
+      navigate('/login', { state: { from: location.pathname } })
+      return
+    }
+    const order = await hold.submit(event.id, selected)
+    if (order) {
+      clearSelection()
+      // Tải lại để số vé còn của từng loại khớp với backend
+      reload()
+    }
+  }
 
   useEffect(() => {
     const previous = document.title
@@ -148,6 +169,22 @@ export default function EventDetailPage() {
         <p className="mt-1 text-body-sm text-fg-muted">Mỗi tài khoản mua tối đa {maxTickets} vé cho sự kiện này, cộng tất cả loại vé. Mỗi vé một mã QR.</p>
         {message && event.status !== 'CANCELLED' && <p className="mt-3 rounded-input bg-surface-sunken px-4 py-3 text-body-sm text-fg">{message}</p>}
 
+        {hold.order && (
+          <div role="status" className={`${card} mt-4 border-fg`}>
+            <p className="font-semibold text-title">Đã giữ vé · Mã đơn {hold.order.code}</p>
+            <p className="mt-1 text-body-sm text-fg">
+              {hold.order.items.map((i) => `${i.quantity} × ${i.ticketName}`).join(', ')} · {formatMoney(Number(hold.order.totalAmount))}
+            </p>
+            {secondsUntil(hold.order.expiresAt, now) > 0 ? (
+              <p className="mt-1 text-body-sm text-fg-muted">
+                Giữ vé còn <span className="font-semibold text-title tabular-nums">{formatMinutes(secondsUntil(hold.order.expiresAt, now))}</span>. Thanh toán trực tuyến sắp có, đơn chưa thanh toán sẽ tự huỷ khi hết giờ.
+              </p>
+            ) : (
+              <p className="mt-1 text-body-sm text-danger">Đã hết thời gian giữ vé.</p>
+            )}
+          </div>
+        )}
+
         {tiers.length === 0 ? (
           <p className={`${card} mt-4 text-body-sm text-fg-muted`}>Sự kiện chưa có giá vé. Ban tổ chức sẽ cập nhật trước giờ mở bán.</p>
         ) : (
@@ -204,13 +241,27 @@ export default function EventDetailPage() {
             <button type="button" onClick={clearSelection} className={smallButton}>
               Bỏ chọn
             </button>
-            {/* TODO: giữ vé 10 phút bằng Redis (giai đoạn 2). Chưa có API nên nút tắt và ghi rõ */}
+            {/* Chỉ CUSTOMER giữ được vé. Khách chưa đăng nhập thì đưa sang /login rồi quay lại trang này */}
             <div className="flex flex-col items-end">
-              <PrimaryButton type="button" disabled>
-                Giữ vé
-              </PrimaryButton>
-              <span className="mt-1 text-caption text-fg-muted">Sắp có</span>
+              {user && !isCustomer ? (
+                <>
+                  <PrimaryButton type="button" disabled>
+                    Giữ vé
+                  </PrimaryButton>
+                  <span className="mt-1 text-caption text-fg-muted">Chỉ tài khoản khách hàng mua được vé</span>
+                </>
+              ) : (
+                <PrimaryButton type="button" onClick={handleHold} disabled={authLoading || hold.submitting}>
+                  {hold.submitting && <Spinner />}
+                  {user ? 'Giữ vé' : 'Đăng nhập để giữ vé'}
+                </PrimaryButton>
+              )}
             </div>
+            {hold.error && (
+              <p role="alert" className="basis-full text-body-sm text-danger">
+                {hold.error}
+              </p>
+            )}
           </div>
         </div>
       )}
