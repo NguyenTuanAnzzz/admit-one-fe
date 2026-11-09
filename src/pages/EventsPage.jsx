@@ -27,7 +27,9 @@ function EventCard({ event: e, now }) {
   const d = hanoiParts(e.startsAt)
   const sale = hanoiParts(e.saleOpensAt)
   const untilSale = secondsUntil(e.saleOpensAt, now)
-  const soldOut = e.status === EVENT_STATUS.SOLD_OUT
+  const ended = e.status === EVENT_STATUS.ENDED
+  // Hết vé hoặc đã diễn ra: thẻ xám đi, không mua được nữa
+  const soldOut = e.status === EVENT_STATUS.SOLD_OUT || ended
 
   return (
     <li className="relative flex flex-col overflow-hidden rounded-card border border-card-line bg-card transition-shadow focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus hover:border-card-line-hover hover:shadow-card-hover">
@@ -76,6 +78,8 @@ function EventCard({ event: e, now }) {
               <p className="text-fg-muted">Mở bán sau</p>
               <p className="font-display text-subheading font-bold text-title tabular-nums">{formatDuration(untilSale)}</p>
             </>
+          ) : ended ? (
+            <p className="font-semibold text-fg-muted">Đã diễn ra</p>
           ) : soldOut ? (
             <p className="font-semibold text-fg-muted">Đã bán hết vé</p>
           ) : (

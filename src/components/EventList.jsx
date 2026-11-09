@@ -134,7 +134,9 @@ export function EventList() {
 function EventCard({ ref, index, event: e, now }) {
   const d = hanoiParts(e.startsAt)
   const untilSale = secondsUntil(e.saleOpensAt, now)
-  const soldOut = e.status === EVENT_STATUS.SOLD_OUT
+  const ended = e.status === EVENT_STATUS.ENDED
+  // Hết vé hoặc đã diễn ra: thẻ xám đi, không mua được nữa
+  const soldOut = e.status === EVENT_STATUS.SOLD_OUT || ended
   const price = e.priceFrom != null ? formatMoney(Number(e.priceFrom)) : null
 
   return (
@@ -193,6 +195,8 @@ function EventCard({ ref, index, event: e, now }) {
               <p className="text-fg-muted">Mở bán sau</p>
               <p className="font-display text-subheading font-bold text-title tabular-nums">{formatDuration(untilSale)}</p>
             </div>
+          ) : ended ? (
+            <p className="text-body-sm font-semibold text-fg-muted">Đã diễn ra</p>
           ) : (
             <div className="text-body-sm">
               <p className="text-fg-muted">Giá từ</p>

@@ -28,6 +28,7 @@ function SaleNote({ event, now }) {
     )
   }
   if (event.status === EVENT_STATUS.SOLD_OUT) return <p className="text-body-sm text-fg-muted">Đã bán hết vé</p>
+  if (event.status === EVENT_STATUS.ENDED) return <p className="text-body-sm text-fg-muted">Sự kiện đã diễn ra</p>
   return (
     <p className="text-body-sm text-fg-muted">
       Đang mở bán từ {sale.time}, {sale.day}/{sale.month}/{sale.year}
@@ -87,7 +88,7 @@ function Slide({ event, now, index, total }) {
 
         <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
           <Link to={`/events/${event.id}`} className={buyLink}>
-            {soldOut ? 'Xem sự kiện' : 'Mua vé'}
+            {soldOut || event.status === EVENT_STATUS.ENDED ? 'Xem sự kiện' : 'Mua vé'}
             <span className="sr-only"> {event.name}</span>
           </Link>
           <p className="text-body-sm text-fg-muted">Vé được giữ 10 phút để bạn thanh toán.</p>

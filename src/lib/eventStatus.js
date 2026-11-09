@@ -1,4 +1,4 @@
-// Trùng enum EventStatus ở backend: DRAFT, UPCOMING, ON_SALE, SOLD_OUT, CANCELLED.
+// Trùng enum EventStatus ở backend: DRAFT, UPCOMING, ON_SALE, SOLD_OUT, ENDED, CANCELLED.
 // PUBLISHED là giá trị cũ, giữ nhãn phòng khi DB còn sự kiện mang giá trị này
 export const EVENT_STATUS = {
   DRAFT: 'DRAFT',
@@ -6,6 +6,7 @@ export const EVENT_STATUS = {
   UPCOMING: 'UPCOMING',
   ON_SALE: 'ON_SALE',
   SOLD_OUT: 'SOLD_OUT',
+  ENDED: 'ENDED',
   CANCELLED: 'CANCELLED',
 }
 
@@ -15,6 +16,7 @@ export const EVENT_STATUS_LABEL = {
   [EVENT_STATUS.UPCOMING]: 'Sắp mở bán',
   [EVENT_STATUS.ON_SALE]: 'Đang bán',
   [EVENT_STATUS.SOLD_OUT]: 'Hết vé',
+  [EVENT_STATUS.ENDED]: 'Đã diễn ra',
   [EVENT_STATUS.CANCELLED]: 'Đã huỷ',
 }
 
@@ -25,5 +27,7 @@ export const EVENT_STATUS_STYLE = {
   [EVENT_STATUS.UPCOMING]: 'bg-status-upcoming text-status-upcoming-fg',
   [EVENT_STATUS.ON_SALE]: 'bg-status-on-sale text-status-on-sale-fg',
   [EVENT_STATUS.SOLD_OUT]: 'bg-status-sold-out text-status-sold-out-fg',
+  // Đã diễn ra: xám nhạt có viền, cùng kiểu bản nháp nhưng khác chữ
+  [EVENT_STATUS.ENDED]: 'border border-badge-line bg-surface-sunken text-fg-muted',
   [EVENT_STATUS.CANCELLED]: 'bg-danger-subtle text-danger',
 }

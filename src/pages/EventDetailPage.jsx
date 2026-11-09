@@ -26,6 +26,8 @@ function saleMessage(event, untilSale) {
       return untilSale > 0 ? 'Chưa mở bán. Bạn xem trước giá vé được, tới giờ mở bán mới chọn vé.' : 'Sắp mở bán, tải lại trang sau ít phút.'
     case 'SOLD_OUT':
       return 'Sự kiện đã bán hết vé. Vé được nhả lại (khi người khác hết thời gian giữ vé) sẽ hiện ở đây.'
+    case 'ENDED':
+      return 'Sự kiện đã diễn ra, không còn bán vé. Vé bạn đã mua vẫn xem lại được trong mục Vé của tôi.'
     case 'CANCELLED':
       return 'Sự kiện đã bị huỷ. Đơn đã thanh toán sẽ được hoàn tiền.'
     default:
