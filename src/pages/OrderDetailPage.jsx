@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { cancelMyOrder } from '../api/orderApi'
+import { Link, Navigate, useParams, useSearchParams } from 'react-router-dom'
+import { cancelMyOrder, startPayment } from '../api/orderApi'
 import { GhostButton, PrimaryButton } from '../components/Button'
 import { Spinner } from '../components/Spinner'
 import { useAuth } from '../context/AuthContext'
@@ -33,16 +33,36 @@ function statusMessage(order) {
 
 /**
  * Trang /orders/:id: chi tiết một đơn của khách (C-08). Đơn đang giữ thì đếm ngược tới hạn thanh toán.
- * Nút Thanh toán tắt vì API thanh toán chưa làm. Đơn không có hoặc của người khác: backend trả 404.
+ * Thanh toán: gọi POST /orders/{id}/pay lấy link payOS rồi chuyển khách sang đó.
+ * payOS đưa khách về /orders/{id}/payment (PaymentResultPage). Link payOS tạo trước đó trỏ về đây kèm ?payment=,
+ * gặp thì chuyển sang trang kết quả.
+ * Đơn không có hoặc của người khác: backend trả 404.
  */
 export default function OrderDetailPage() {
   const { id } = useParams()
   const now = useNow()
+  const [searchParams] = useSearchParams()
+  const payment = searchParams.get('payment')
   const { loading, order, error, notFound, reload } = useOrderDetail(id)
   const { fetchWithAuth } = useAuth()
   const confirm = useConfirm()
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState(null)
+  const [paying, setPaying] = useState(false)
+  const [payError, setPayError] = useState(null)
+
+  // Lấy link payOS rồi rời trang sang payOS. Lỗi thì ở lại trang và báo
+  async function handlePay() {
+    setPaying(true)
+    setPayError(null)
+    try {
+      const { checkoutUrl } = await startPayment(fetchWithAuth, order.id)
+      window.location.assign(checkoutUrl)
+    } catch (err) {
+      setPayError(err.message)
+      setPaying(false)
+    }
+  }
 
   // Hỏi lại trước khi huỷ (không hoàn tác được). Huỷ xong tải lại đơn để thấy trạng thái Đã huỷ
   async function handleCancel() {
@@ -74,6 +94,11 @@ export default function OrderDetailPage() {
       document.title = previous
     }
   }, [order])
+
+  // Link payOS tạo trước khi có trang kết quả trỏ về /orders/{id}?payment=...: chuyển sang trang kết quả
+  if (payment) {
+    return <Navigate to={`/orders/${id}/payment?result=${payment === 'success' ? 'success' : 'cancel'}`} replace />
+  }
 
   if (loading) {
     return (
@@ -141,21 +166,19 @@ export default function OrderDetailPage() {
               {cancelling && <Spinner />}
               Huỷ đơn
             </GhostButton>
-            {/* TODO: nối POST /orders/{id}/pay khi làm xong thanh toán */}
-            <div className="flex flex-col items-end">
-              <PrimaryButton type="button" disabled>
-                Thanh toán {formatMoney(Number(order.totalAmount))}
-              </PrimaryButton>
-              <span className="mt-1 text-caption text-fg-muted">Thanh toán trực tuyến sắp có</span>
-            </div>
+            <PrimaryButton type="button" onClick={handlePay} disabled={paying || left === 0}>
+              {paying && <Spinner />}
+              Thanh toán {formatMoney(Number(order.totalAmount))}
+            </PrimaryButton>
           </div>
-          {cancelError && (
+          {(cancelError || payError) && (
             <p role="alert" className="basis-full text-body-sm text-danger">
-              {cancelError}
+              {cancelError || payError}
             </p>
           )}
         </section>
       )}
+
       {message && <p className="mt-6 rounded-input bg-surface-sunken px-4 py-3 text-body-sm text-fg">{message}</p>}
 
       <section aria-labelledby="su-kien" className={`${card} mt-6 flex gap-4`}>

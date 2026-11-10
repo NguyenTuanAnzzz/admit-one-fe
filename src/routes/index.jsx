@@ -28,6 +28,7 @@ const EventDetailPage = lazy(() => import('../pages/EventDetailPage'))
 // Đơn của tôi: chỉ khách hàng dùng, tải khi mở
 const MyOrdersPage = lazy(() => import('../pages/MyOrdersPage'))
 const OrderDetailPage = lazy(() => import('../pages/OrderDetailPage'))
+const PaymentResultPage = lazy(() => import('../pages/PaymentResultPage'))
 
 // Mục dashboard đã có trang thật: [đường dẫn con, trang], '' là trang chính của mục. Mục chưa có ở đây hiện trang "Sắp có"
 const DASHBOARD_PAGES = {
@@ -70,6 +71,8 @@ export default function AppRoute() {
           <Route element={<PublicLayout />}>
             <Route path="/orders" element={<MyOrdersPage />} />
             <Route path="/orders/:id" element={<OrderDetailPage />} />
+            {/* payOS đưa khách về đây sau khi thanh toán hoặc huỷ */}
+            <Route path="/orders/:id/payment" element={<PaymentResultPage />} />
           </Route>
         </Route>
 

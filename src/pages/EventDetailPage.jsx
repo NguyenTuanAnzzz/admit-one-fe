@@ -177,7 +177,7 @@ export default function EventDetailPage() {
             </p>
             {secondsUntil(hold.order.holdDeadline, now) > 0 ? (
               <p className="mt-1 text-body-sm text-fg-muted">
-                Giữ vé còn <span className="font-semibold text-title tabular-nums">{formatMinutes(secondsUntil(hold.order.holdDeadline, now))}</span>. Thanh toán trực tuyến sắp có, đơn chưa thanh toán sẽ tự huỷ khi hết giờ.
+                Giữ vé còn <span className="font-semibold text-title tabular-nums">{formatMinutes(secondsUntil(hold.order.holdDeadline, now))}</span>. Thanh toán trước khi hết giờ, quá giờ đơn tự huỷ.
               </p>
             ) : (
               <p className="mt-1 text-body-sm text-danger">Đã hết thời gian giữ vé.</p>

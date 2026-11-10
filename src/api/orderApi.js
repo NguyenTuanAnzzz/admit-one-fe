@@ -54,6 +54,34 @@ export async function cancelMyOrder(fetchWithAuth, orderId) {
 }
 
 /**
+ * Bắt đầu thanh toán: POST /orders/{id}/pay. Backend tạo (hoặc lấy lại) link payOS, trả { checkoutUrl }.
+ * Đơn không còn chờ thanh toán (đã hết giờ, đã huỷ, đã trả): 400.
+ */
+export async function startPayment(fetchWithAuth, orderId) {
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/orders/${orderId}/pay`, { method: 'POST' })
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok || !data?.checkoutUrl) throw new Error(data?.message ?? 'Chưa mở được trang thanh toán. Vui lòng thử lại.')
+  return data
+}
+
+/**
+ * Đối soát thanh toán: POST /orders/{id}/payment/sync. Backend tự hỏi payOS, có giao dịch thì ghi nhận như webhook.
+ * Dùng ở trang kết quả, phòng khi webhook payOS không về được (ngrok tắt, mạng lỗi).
+ */
+export async function syncPayment(fetchWithAuth, orderId) {
+  const res = await fetchWithAuth(`${API_URL}/orders/${orderId}/payment/sync`, { method: 'POST' })
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Chưa kiểm tra được thanh toán.')
+  return data
+}
+
+/**
  * Đơn của tôi: GET /orders/me, chỉ CUSTOMER. params: { keyword, status, page, size }, tham số rỗng thì không gửi.
  * keyword tìm theo mã đơn hoặc tên sự kiện. Đơn mới nhất lên trước.
  * Trả { items, page, size, totalItems, totalPages }, mỗi item là MyOrderResponse.

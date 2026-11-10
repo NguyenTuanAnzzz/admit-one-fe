@@ -83,7 +83,7 @@ function OrderCard({ order, now }) {
         {order.status === ORDER_STATUS.PENDING &&
           (left > 0 ? (
             <p className="mt-2 text-body-sm text-fg-muted">
-              Giữ vé còn <span className="font-semibold text-title tabular-nums">{formatMinutes(left)}</span>. Thanh toán trực tuyến sắp có, đơn chưa thanh toán sẽ tự huỷ khi hết giờ.
+              Giữ vé còn <span className="font-semibold text-title tabular-nums">{formatMinutes(left)}</span>. Thanh toán trước khi hết giờ, quá giờ đơn tự huỷ.
             </p>
           ) : (
             <p className="mt-2 text-body-sm text-fg-muted">Đã hết thời gian giữ vé, đơn sẽ chuyển sang Hết hạn trong giây lát.</p>
