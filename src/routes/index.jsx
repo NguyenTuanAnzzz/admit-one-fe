@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AuthLayout from '../layout/AuthLayout'
 import DashboardLayout from '../layout/DashboardLayout'
 import PublicLayout from '../layout/PublicLayout'
-import { DASHBOARD_NAV, DASHBOARD_ROLES } from '../lib/roles'
+import { DASHBOARD_NAV, DASHBOARD_ROLES, ROLE } from '../lib/roles'
 import DashboardHome from '../pages/dashboard/DashboardHome'
 import DashboardPlaceholder from '../pages/dashboard/DashboardPlaceholder'
 import HomePage from '../pages/HomePage'
@@ -25,6 +25,8 @@ const DashboardStaff = lazy(() => import('../pages/dashboard/DashboardStaff'))
 const DashboardStaffForm = lazy(() => import('../pages/dashboard/DashboardStaffForm'))
 // Trang chi tiết sự kiện cho khách: tải khi mở. Suspense chờ tải nằm ở PublicLayout
 const EventDetailPage = lazy(() => import('../pages/EventDetailPage'))
+// Đơn của tôi: chỉ khách hàng dùng, tải khi mở
+const MyOrdersPage = lazy(() => import('../pages/MyOrdersPage'))
 
 // Mục dashboard đã có trang thật: [đường dẫn con, trang], '' là trang chính của mục. Mục chưa có ở đây hiện trang "Sắp có"
 const DASHBOARD_PAGES = {
@@ -61,6 +63,13 @@ export default function AppRoute() {
       {/* Cần đăng nhập */}
       <Route element={<ProtectRoute />}>
         <Route path="/profile" element={<ProfilePage />} />
+
+        {/* Chỉ CUSTOMER có đơn hàng. Admin, Staff vào /orders thì về trang chủ */}
+        <Route element={<ProtectRole roles={[ROLE.CUSTOMER]} />}>
+          <Route element={<PublicLayout />}>
+            <Route path="/orders" element={<MyOrdersPage />} />
+          </Route>
+        </Route>
 
         {/* Admin và Staff vào chung /dashboard, mỗi trang con tự giới hạn role theo DASHBOARD_NAV */}
         <Route element={<ProtectRole roles={DASHBOARD_ROLES} />}>

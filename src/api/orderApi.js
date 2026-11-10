@@ -1,5 +1,30 @@
+import { fromSpringPage } from '../lib/springPage'
+
 // Đổi địa chỉ backend trong file .env (VITE_API_URL), đã gồm /api ở cuối
 const API_URL = import.meta.env.VITE_API_URL
+
+/**
+ * Đơn của tôi: GET /orders/me, chỉ CUSTOMER. params: { keyword, status, page, size }, tham số rỗng thì không gửi.
+ * keyword tìm theo mã đơn hoặc tên sự kiện. Đơn mới nhất lên trước.
+ * Trả { items, page, size, totalItems, totalPages }, mỗi item là MyOrderResponse.
+ */
+export async function getMyOrders(fetchWithAuth, params = {}) {
+  const query = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') query.set(key, value)
+  })
+
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/orders/me?${query}`)
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Không tải được danh sách đơn.')
+  return fromSpringPage(data)
+}
 
 /**
  * Tạo đơn: POST /orders, chỉ tài khoản CUSTOMER (backend chặn bằng @PreAuthorize, role khác nhận 403).
