@@ -39,7 +39,7 @@ export function SiteHeader({ user, authReady = true, linkBase = '', onLogin, onL
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface">
+    <header className="sticky top-0 z-40 border-b border-line bg-surface print:hidden">
       <div className="mx-auto flex max-w-page flex-wrap items-center gap-x-4 gap-y-3 px-gutter py-3 lg:flex-nowrap">
         {linkBase ? <HeaderLogo className="order-1" href={import.meta.env.BASE_URL} label="Admit One, về trang chủ" /> : <HeaderLogo className="order-1" />}
 

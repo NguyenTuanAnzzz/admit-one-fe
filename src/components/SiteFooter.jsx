@@ -4,7 +4,7 @@ import { Mascot } from './Mascot'
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-line px-gutter py-10">
+    <footer className="border-t border-line px-gutter py-10 print:hidden">
       <div className="mx-auto flex max-w-page flex-col gap-8 md:flex-row md:items-start md:justify-between">
         <div className="max-w-sm">
           <p className="flex items-end gap-2 font-display text-heading-sm font-extrabold text-brand">

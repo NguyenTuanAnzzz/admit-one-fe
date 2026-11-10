@@ -29,6 +29,7 @@ const EventDetailPage = lazy(() => import('../pages/EventDetailPage'))
 const MyOrdersPage = lazy(() => import('../pages/MyOrdersPage'))
 const OrderDetailPage = lazy(() => import('../pages/OrderDetailPage'))
 const PaymentResultPage = lazy(() => import('../pages/PaymentResultPage'))
+const TicketsPage = lazy(() => import('../pages/TicketsPage'))
 
 // Mục dashboard đã có trang thật: [đường dẫn con, trang], '' là trang chính của mục. Mục chưa có ở đây hiện trang "Sắp có"
 const DASHBOARD_PAGES = {
@@ -73,6 +74,8 @@ export default function AppRoute() {
             <Route path="/orders/:id" element={<OrderDetailPage />} />
             {/* payOS đưa khách về đây sau khi thanh toán hoặc huỷ */}
             <Route path="/orders/:id/payment" element={<PaymentResultPage />} />
+            {/* Vé điện tử có QR của đơn đã thanh toán, in được */}
+            <Route path="/orders/:id/tickets" element={<TicketsPage />} />
           </Route>
         </Route>
 

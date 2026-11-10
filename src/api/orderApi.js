@@ -82,6 +82,23 @@ export async function syncPayment(fetchWithAuth, orderId) {
 }
 
 /**
+ * Vé đã xuất của một đơn: GET /orders/{id}/tickets, chỉ chủ đơn. Đơn chưa thanh toán thì trả [].
+ * Mỗi vé: { id, code, ticketName, status (VALID | CHECKED_IN | VOID), qrSecret, checkedInAt }. QR vẽ từ qrSecret.
+ */
+export async function getMyTickets(fetchWithAuth, orderId) {
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/orders/${orderId}/tickets`)
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Không tải được vé.')
+  return data ?? []
+}
+
+/**
  * Đơn của tôi: GET /orders/me, chỉ CUSTOMER. params: { keyword, status, page, size }, tham số rỗng thì không gửi.
  * keyword tìm theo mã đơn hoặc tên sự kiện. Đơn mới nhất lên trước.
  * Trả { items, page, size, totalItems, totalPages }, mỗi item là MyOrderResponse.

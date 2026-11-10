@@ -213,6 +213,14 @@ export default function PaymentResultPage() {
           Xem chi tiết đơn
         </Link>
         {order.status === ORDER_STATUS.PAID && (
+          <Link
+            to={`/orders/${order.id}/tickets`}
+            className="inline-flex min-h-11 items-center justify-center rounded-pill border-[1.5px] border-button-primary bg-button-primary px-6 text-body-sm font-semibold text-button-primary-fg hover:border-button-primary-hover hover:bg-button-primary-hover"
+          >
+            Xem vé điện tử
+          </Link>
+        )}
+        {order.status === ORDER_STATUS.PAID && (
           <Link to="/events" className={ghostLink}>
             Xem sự kiện khác
           </Link>

@@ -181,6 +181,22 @@ export default function OrderDetailPage() {
 
       {message && <p className="mt-6 rounded-input bg-surface-sunken px-4 py-3 text-body-sm text-fg">{message}</p>}
 
+      {/* Đơn đã thanh toán: lối vào vé điện tử có QR */}
+      {order.status === ORDER_STATUS.PAID && (
+        <section aria-label="Vé điện tử" className="mt-4 flex flex-wrap items-center justify-between gap-4 rounded-card border border-card-line bg-card px-5 py-4">
+          <div>
+            <p className="font-semibold text-title">Vé điện tử đã sẵn sàng</p>
+            <p className="text-body-sm text-fg-muted">Mỗi vé một mã QR, đưa cho nhân viên soát vé tại cửa.</p>
+          </div>
+          <Link
+            to={`/orders/${order.id}/tickets`}
+            className="inline-flex min-h-11 items-center justify-center rounded-pill border-[1.5px] border-button-primary bg-button-primary px-6 text-body-sm font-semibold text-button-primary-fg hover:border-button-primary-hover hover:bg-button-primary-hover"
+          >
+            Xem và in vé
+          </Link>
+        </section>
+      )}
+
       <section aria-labelledby="su-kien" className={`${card} mt-6 flex gap-4`}>
         {order.eventPosterUrl && <img src={order.eventPosterUrl} alt="" className="aspect-[3/4] w-20 shrink-0 rounded-input object-cover sm:w-24" />}
         <div className="min-w-0">

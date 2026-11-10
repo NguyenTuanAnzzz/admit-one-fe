@@ -92,6 +92,14 @@ function OrderCard({ order, now }) {
         <Link to={`/orders/${order.id}`} className="mt-1 inline-flex min-h-11 items-center text-body-sm font-semibold text-title underline underline-offset-4 hover:text-fg-muted">
           Xem chi tiết đơn<span className="sr-only"> {order.code}</span>
         </Link>
+        {order.status === ORDER_STATUS.PAID && (
+          <Link
+            to={`/orders/${order.id}/tickets`}
+            className="mt-1 ml-4 inline-flex min-h-11 items-center text-body-sm font-semibold text-action underline underline-offset-4 hover:text-action-hover"
+          >
+            Xem vé<span className="sr-only"> đơn {order.code}</span>
+          </Link>
+        )}
       </div>
     </li>
   )
