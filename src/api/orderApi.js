@@ -4,6 +4,15 @@ import { fromSpringPage } from '../lib/springPage'
 const API_URL = import.meta.env.VITE_API_URL
 
 /**
+ * Gắn holdDeadline (mốc ms) để đếm ngược giữ vé: lúc nhận response + remainingSeconds backend tính bằng giờ server.
+ * Không so expiresAt với giờ máy khách, vì máy khách chỉnh giờ sai thì đồng hồ lệch theo.
+ * Date.now() ở đây chỉ dùng để đo thời gian trôi qua từ lúc nhận, nên giờ máy sai bao nhiêu vẫn khớp server.
+ */
+function withHoldDeadline(order) {
+  return { ...order, holdDeadline: Date.now() + (order.remainingSeconds ?? 0) * 1000 }
+}
+
+/**
  * Chi tiết một đơn của tôi: GET /orders/{id}, trả MyOrderResponse.
  * Đơn không có hoặc của người khác: backend trả 404, err.status = 404 để trang hiện "không tìm thấy".
  */
@@ -22,7 +31,7 @@ export async function getMyOrder(fetchWithAuth, orderId) {
     err.status = res.status === 400 ? 404 : res.status
     throw err
   }
-  return data
+  return withHoldDeadline(data)
 }
 
 /**
@@ -62,13 +71,15 @@ export async function getMyOrders(fetchWithAuth, params = {}) {
 
   const data = await res.json().catch(() => null)
   if (!res.ok) throw new Error(data?.message ?? 'Không tải được danh sách đơn.')
-  return fromSpringPage(data)
+  const page = fromSpringPage(data)
+  return { ...page, items: page.items.map(withHoldDeadline) }
 }
 
 /**
  * Tạo đơn: POST /orders, chỉ tài khoản CUSTOMER (backend chặn bằng @PreAuthorize, role khác nhận 403).
  * items: [{ ticketId, quantity }], mỗi loại vé một dòng, tổng tối đa 4 vé.
- * Trả CreateOrderResponse: { id, code, eventId, eventName, totalAmount, status, expiresAt, items }.
+ * Trả CreateOrderResponse: { id, code, eventId, eventName, totalAmount, status, expiresAt, items, remainingSeconds }
+ * kèm holdDeadline để đếm ngược.
  */
 export async function createOrder(fetchWithAuth, { eventId, items }) {
   let res
@@ -88,5 +99,5 @@ export async function createOrder(fetchWithAuth, { eventId, items }) {
     err.status = res.status
     throw err
   }
-  return data
+  return withHoldDeadline(data)
 }

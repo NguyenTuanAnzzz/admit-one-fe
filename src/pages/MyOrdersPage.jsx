@@ -30,7 +30,7 @@ const formatHanoi = (iso) => {
 
 /** Một đơn: poster nhỏ, sự kiện, các loại vé, tổng tiền, trạng thái. Đơn đang giữ thì đếm ngược tới hạn thanh toán. */
 function OrderCard({ order, now }) {
-  const left = order.status === ORDER_STATUS.PENDING ? secondsUntil(order.expiresAt, now) : 0
+  const left = order.status === ORDER_STATUS.PENDING ? secondsUntil(order.holdDeadline, now) : 0
   const created = hanoiParts(order.createdAt)
 
   return (

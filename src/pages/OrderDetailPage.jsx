@@ -106,7 +106,7 @@ export default function OrderDetailPage() {
     )
   }
 
-  const left = order.status === ORDER_STATUS.PENDING ? secondsUntil(order.expiresAt, now) : 0
+  const left = order.status === ORDER_STATUS.PENDING ? secondsUntil(order.holdDeadline, now) : 0
   const message = statusMessage(order)
 
   return (

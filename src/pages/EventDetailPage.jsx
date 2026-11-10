@@ -175,9 +175,9 @@ export default function EventDetailPage() {
             <p className="mt-1 text-body-sm text-fg">
               {hold.order.items.map((i) => `${i.quantity} × ${i.ticketName}`).join(', ')} · {formatMoney(Number(hold.order.totalAmount))}
             </p>
-            {secondsUntil(hold.order.expiresAt, now) > 0 ? (
+            {secondsUntil(hold.order.holdDeadline, now) > 0 ? (
               <p className="mt-1 text-body-sm text-fg-muted">
-                Giữ vé còn <span className="font-semibold text-title tabular-nums">{formatMinutes(secondsUntil(hold.order.expiresAt, now))}</span>. Thanh toán trực tuyến sắp có, đơn chưa thanh toán sẽ tự huỷ khi hết giờ.
+                Giữ vé còn <span className="font-semibold text-title tabular-nums">{formatMinutes(secondsUntil(hold.order.holdDeadline, now))}</span>. Thanh toán trực tuyến sắp có, đơn chưa thanh toán sẽ tự huỷ khi hết giờ.
               </p>
             ) : (
               <p className="mt-1 text-body-sm text-danger">Đã hết thời gian giữ vé.</p>
