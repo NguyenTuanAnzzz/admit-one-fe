@@ -9,7 +9,9 @@ const API_URL = import.meta.env.VITE_API_URL
  * Date.now() ở đây chỉ dùng để đo thời gian trôi qua từ lúc nhận, nên giờ máy sai bao nhiêu vẫn khớp server.
  */
 function withHoldDeadline(order) {
-  return { ...order, holdDeadline: Date.now() + (order.remainingSeconds ?? 0) * 1000 }
+  // Backend cũ chưa gửi remainingSeconds: tạm dùng expiresAt, không coi như đã hết giờ
+  const holdDeadline = typeof order.remainingSeconds === 'number' ? Date.now() + order.remainingSeconds * 1000 : new Date(order.expiresAt).getTime()
+  return { ...order, holdDeadline }
 }
 
 /**
