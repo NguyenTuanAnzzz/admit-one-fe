@@ -1,7 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { cancelMyOrder } from '../api/orderApi'
 import { GhostButton, PrimaryButton } from '../components/Button'
 import { Spinner } from '../components/Spinner'
+import { useAuth } from '../context/AuthContext'
+import { useConfirm } from '../context/ConfirmContext'
 import useOrderDetail from '../hook/useOrderDetail'
 import { formatMinutes, formatMoney, hanoiParts, secondsUntil, useNow } from '../lib/format'
 import { ORDER_STATUS, ORDER_STATUS_LABEL, ORDER_STATUS_STYLE } from '../lib/orderStatus'
@@ -36,6 +39,33 @@ export default function OrderDetailPage() {
   const { id } = useParams()
   const now = useNow()
   const { loading, order, error, notFound, reload } = useOrderDetail(id)
+  const { fetchWithAuth } = useAuth()
+  const confirm = useConfirm()
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState(null)
+
+  // Hỏi lại trước khi huỷ (không hoàn tác được). Huỷ xong tải lại đơn để thấy trạng thái Đã huỷ
+  async function handleCancel() {
+    const ok = await confirm({
+      title: `Huỷ đơn ${order.code}?`,
+      message: 'Vé đang giữ sẽ được trả lại cho người khác mua. Không hoàn tác được.',
+      confirmLabel: 'Huỷ đơn',
+      cancelLabel: 'Giữ lại',
+      tone: 'danger',
+    })
+    if (!ok) return
+
+    setCancelling(true)
+    setCancelError(null)
+    try {
+      await cancelMyOrder(fetchWithAuth, order.id)
+      reload()
+    } catch (err) {
+      setCancelError(err.message)
+    } finally {
+      setCancelling(false)
+    }
+  }
 
   useEffect(() => {
     const previous = document.title
@@ -106,13 +136,24 @@ export default function OrderDetailPage() {
           ) : (
             <p className="text-body-sm text-fg">Đã hết thời gian giữ vé, đơn sẽ chuyển sang Hết hạn trong giây lát.</p>
           )}
-          {/* TODO: nối POST /orders/{id}/pay khi làm xong thanh toán */}
-          <div className="flex flex-col items-end">
-            <PrimaryButton type="button" disabled>
-              Thanh toán {formatMoney(Number(order.totalAmount))}
-            </PrimaryButton>
-            <span className="mt-1 text-caption text-fg-muted">Thanh toán trực tuyến sắp có</span>
+          <div className="flex flex-wrap items-start gap-3">
+            <GhostButton type="button" onClick={handleCancel} disabled={cancelling}>
+              {cancelling && <Spinner />}
+              Huỷ đơn
+            </GhostButton>
+            {/* TODO: nối POST /orders/{id}/pay khi làm xong thanh toán */}
+            <div className="flex flex-col items-end">
+              <PrimaryButton type="button" disabled>
+                Thanh toán {formatMoney(Number(order.totalAmount))}
+              </PrimaryButton>
+              <span className="mt-1 text-caption text-fg-muted">Thanh toán trực tuyến sắp có</span>
+            </div>
           </div>
+          {cancelError && (
+            <p role="alert" className="basis-full text-body-sm text-danger">
+              {cancelError}
+            </p>
+          )}
         </section>
       )}
       {message && <p className="mt-6 rounded-input bg-surface-sunken px-4 py-3 text-body-sm text-fg">{message}</p>}

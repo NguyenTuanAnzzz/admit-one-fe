@@ -26,6 +26,23 @@ export async function getMyOrder(fetchWithAuth, orderId) {
 }
 
 /**
+ * Khách tự huỷ đơn đang giữ: PATCH /orders/{id}/cancel, vé được trả lại ngay. Trả { message }.
+ * Đơn không còn PENDING: 400; vừa hết hạn hoặc vừa thanh toán ở chỗ khác: 409.
+ */
+export async function cancelMyOrder(fetchWithAuth, orderId) {
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/orders/${orderId}/cancel`, { method: 'PATCH' })
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Chưa huỷ được đơn. Vui lòng thử lại.')
+  return data
+}
+
+/**
  * Đơn của tôi: GET /orders/me, chỉ CUSTOMER. params: { keyword, status, page, size }, tham số rỗng thì không gửi.
  * keyword tìm theo mã đơn hoặc tên sự kiện. Đơn mới nhất lên trước.
  * Trả { items, page, size, totalItems, totalPages }, mỗi item là MyOrderResponse.
