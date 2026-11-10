@@ -182,8 +182,8 @@ export default function EventDetailPage() {
             ) : (
               <p className="mt-1 text-body-sm text-danger">Đã hết thời gian giữ vé.</p>
             )}
-            <Link to="/orders" className={`${textLink} text-body-sm`}>
-              Xem đơn của tôi
+            <Link to={`/orders/${hold.order.id}`} className={`${textLink} text-body-sm`}>
+              Xem chi tiết đơn
             </Link>
           </div>
         )}

@@ -4,6 +4,28 @@ import { fromSpringPage } from '../lib/springPage'
 const API_URL = import.meta.env.VITE_API_URL
 
 /**
+ * Chi tiết một đơn của tôi: GET /orders/{id}, trả MyOrderResponse.
+ * Đơn không có hoặc của người khác: backend trả 404, err.status = 404 để trang hiện "không tìm thấy".
+ */
+export async function getMyOrder(fetchWithAuth, orderId) {
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/orders/${orderId}`)
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) {
+    const err = new Error(data?.message ?? 'Không tải được đơn hàng.')
+    // id sai định dạng (400) cũng coi như không có đơn này
+    err.status = res.status === 400 ? 404 : res.status
+    throw err
+  }
+  return data
+}
+
+/**
  * Đơn của tôi: GET /orders/me, chỉ CUSTOMER. params: { keyword, status, page, size }, tham số rỗng thì không gửi.
  * keyword tìm theo mã đơn hoặc tên sự kiện. Đơn mới nhất lên trước.
  * Trả { items, page, size, totalItems, totalPages }, mỗi item là MyOrderResponse.

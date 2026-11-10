@@ -71,7 +71,11 @@ function OrderCard({ order, now }) {
 
         <div className="mt-3 flex flex-wrap items-end justify-between gap-x-4 gap-y-1 border-t border-line pt-3">
           <p className="text-caption text-fg-muted">
-            Mã đơn <span className="font-semibold text-fg">{order.code}</span> · Đặt lúc {created.time} {created.day}/{created.month}/{created.year}
+            Mã đơn{' '}
+            <Link to={`/orders/${order.id}`} className="font-semibold text-title underline underline-offset-4 hover:text-fg-muted">
+              {order.code}
+            </Link>{' '}
+            · Đặt lúc {created.time} {created.day}/{created.month}/{created.year}
           </p>
           <p className="font-display text-subheading font-bold text-action tabular-nums">{formatMoney(Number(order.totalAmount))}</p>
         </div>
@@ -84,6 +88,10 @@ function OrderCard({ order, now }) {
           ) : (
             <p className="mt-2 text-body-sm text-fg-muted">Đã hết thời gian giữ vé, đơn sẽ chuyển sang Hết hạn trong giây lát.</p>
           ))}
+
+        <Link to={`/orders/${order.id}`} className="mt-1 inline-flex min-h-11 items-center text-body-sm font-semibold text-title underline underline-offset-4 hover:text-fg-muted">
+          Xem chi tiết đơn<span className="sr-only"> {order.code}</span>
+        </Link>
       </div>
     </li>
   )
