@@ -148,3 +148,39 @@ export async function createOrder(fetchWithAuth, { eventId, items }) {
   }
   return withHoldDeadline(data)
 }
+
+/**
+ * Dashboard › Đơn hàng (admin, A-06): GET /admin/orders. params: { keyword, status, page, size }, rỗng thì không gửi.
+ * Trả { items, page, size, totalItems, totalPages }, mỗi item là AdminOrderResponse.
+ */
+export async function getAdminOrders(fetchWithAuth, params = {}) {
+  const query = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') query.set(key, value)
+  })
+
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/admin/orders?${query}`)
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Không tải được danh sách đơn.')
+  return fromSpringPage(data)
+}
+
+// Log các lần thanh toán của một đơn (admin): GET /admin/orders/{id}/payments
+export async function getOrderPayments(fetchWithAuth, orderId) {
+  let res
+  try {
+    res = await fetchWithAuth(`${API_URL}/admin/orders/${orderId}/payments`)
+  } catch {
+    throw new Error('Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.')
+  }
+
+  const data = await res.json().catch(() => null)
+  if (!res.ok) throw new Error(data?.message ?? 'Không tải được log thanh toán.')
+  return data ?? []
+}
