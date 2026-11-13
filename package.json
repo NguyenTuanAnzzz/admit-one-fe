@@ -12,6 +12,7 @@
   "dependencies": {
     "@stomp/stompjs": "^7.5.0",
     "framer-motion": "^14.8.0",
+    "html5-qrcode": "^2.3.8",
     "qrcode.react": "4.2.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
