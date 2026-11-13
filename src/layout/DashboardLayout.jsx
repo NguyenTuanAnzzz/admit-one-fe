@@ -29,11 +29,6 @@ export default function DashboardLayout() {
 
   const nav = (
     <ul className="flex flex-wrap gap-1 md:flex-col">
-      <li>
-        <NavLink to="/dashboard" end className={sideLink}>
-          Bắt đầu
-        </NavLink>
-      </li>
       {items.map((item) => (
         <li key={item.path}>
           <NavLink to={item.path} className={sideLink}>

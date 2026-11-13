@@ -1,15 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { getStaffPage } from '../../api/staffApi'
+import { getUserPage } from '../../api/userApi'
 import { useAuth } from '../../context/AuthContext'
 import useEventPage from '../../hook/useEventPage'
-import { EVENT_STATUS_LABEL } from '../../lib/eventStatus'
-import { hanoiParts } from '../../lib/format'
+import { ROLE, ROLE_LABEL } from '../../lib/roles'
 import { pageWindow } from '../../lib/pagination'
 
 const PAGE_SIZE = 10
-// Mỗi dòng hiện tối đa ngần này sự kiện được gán, còn lại gộp thành "+N"
-const EVENTS_SHOWN = 3
 
 const addLink =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-pill border-[1.5px] border-button-primary bg-button-primary px-6 text-body-sm font-semibold text-button-primary-fg hover:border-button-primary-hover hover:bg-button-primary-hover'
@@ -21,9 +18,13 @@ const pageButton = (active) =>
   `inline-flex min-h-11 min-w-11 items-center justify-center rounded-pill px-3 text-body-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40 ${
     active ? 'bg-chip-active text-chip-active-fg' : 'text-fg hover:bg-surface-sunken'
   }`
+const roleTab = (active) =>
+  `inline-flex min-h-11 items-center rounded-pill px-4 text-body-sm font-semibold ${
+    active ? 'bg-chip-active text-chip-active-fg' : 'text-fg-muted hover:bg-surface-sunken hover:text-title'
+  }`
 
-// Cột của hàng tiêu đề và từng dòng giống nhau để thẳng hàng: avatar, tên và email, điện thoại, sự kiện được gán, nút
-const ROW_COLUMNS = 'md:grid-cols-[44px_minmax(0,1.2fr)_130px_minmax(0,1.6fr)_90px]'
+// Cột của hàng tiêu đề và từng dòng giống nhau để thẳng hàng: avatar, tên và email, điện thoại, vai trò, nút
+const ROW_COLUMNS = 'md:grid-cols-[44px_minmax(0,1.2fr)_130px_140px_90px]'
 
 // Tên Việt đặt họ trước nên lấy chữ đầu của hai từ cuối, giống avatar trên header
 const initialsOf = (name) =>
@@ -35,65 +36,58 @@ const initialsOf = (name) =>
     .join('')
     .toUpperCase()
 
-function StaffRow({ staff }) {
-  const shown = staff.events.slice(0, EVENTS_SHOWN)
-  const more = staff.events.length - shown.length
+const ROLE_TABS = [
+  { value: '', label: 'Tất cả' },
+  { value: ROLE.ADMIN, label: ROLE_LABEL[ROLE.ADMIN] },
+  { value: ROLE.STAFF, label: ROLE_LABEL[ROLE.STAFF] },
+  { value: ROLE.CUSTOMER, label: ROLE_LABEL[ROLE.CUSTOMER] },
+]
+
+function UserRow({ user }) {
   return (
     <li className={`grid grid-cols-[44px_minmax(0,1fr)] gap-x-4 gap-y-2 border-t border-line py-4 first:border-t-0 md:items-center ${ROW_COLUMNS}`}>
       <span aria-hidden="true" className="row-span-2 inline-flex size-11 items-center justify-center rounded-full bg-avatar text-body-sm font-bold text-avatar-fg md:row-span-1">
-        {initialsOf(staff.fullName)}
+        {initialsOf(user.fullName)}
       </span>
       <div className="min-w-0">
-        <p className="truncate font-semibold text-title">{staff.fullName}</p>
-        <p className="truncate text-body-sm text-fg-muted">{staff.email}</p>
+        <p className="truncate font-semibold text-title">{user.fullName}</p>
+        <p className="truncate text-body-sm text-fg-muted">{user.email}</p>
       </div>
-      {/* Dưới md: điện thoại, sự kiện và nút xuống dòng dưới tên, có nhãn chữ vì không còn hàng tiêu đề cột */}
       <div className="col-start-2 flex flex-col gap-2 text-body-sm md:contents">
         <p className="text-fg">
           <span className="text-fg-muted md:hidden">Điện thoại: </span>
-          {staff.phone || <span className="text-fg-muted">Chưa có</span>}
+          {user.phone || <span className="text-fg-muted">Chưa có</span>}
         </p>
-        <div className="min-w-0">
-          {staff.events.length === 0 ? (
-            <p className="text-fg-muted">Chưa gán sự kiện nào</p>
-          ) : (
-            <ul aria-label={`Sự kiện của ${staff.fullName}`} className="flex flex-wrap gap-1.5">
-              {shown.map((e) => {
-                const d = hanoiParts(e.startsAt)
-                return (
-                  <li key={e.id} title={`${EVENT_STATUS_LABEL[e.status] ?? e.status}, ${d.day}/${d.month}/${d.year}`} className="max-w-full truncate rounded-badge border border-badge-line bg-badge px-2 py-0.5 text-caption font-semibold text-badge-fg">
-                    {e.name}
-                  </li>
-                )
-              })}
-              {more > 0 && <li className="rounded-badge px-2 py-0.5 text-caption font-semibold text-fg-muted">+{more}</li>}
-            </ul>
-          )}
-        </div>
-        <div className="md:flex md:justify-end">
-          <Link to={staff.id} aria-label={`Sửa ${staff.fullName}`} className={rowAction}>
-            Sửa
-          </Link>
-        </div>
+        <p>
+          <span className="rounded-badge border border-badge-line bg-badge px-2 py-0.5 text-caption font-semibold text-badge-fg">{ROLE_LABEL[user.role] ?? user.role}</span>
+        </p>
+        {user.role !== ROLE.CUSTOMER && (
+          <div className="md:flex md:justify-end">
+            <Link to={user.id} aria-label={`Sửa ${user.fullName}`} className={rowAction}>
+              Sửa
+            </Link>
+          </div>
+        )}
       </div>
     </li>
   )
 }
 
 /**
- * Dashboard › Nhân viên (A-07): danh sách tài khoản Staff, tìm theo tên hoặc email, phân trang ở backend.
- * Bộ lọc trên URL (?q=&page=) như trang Sự kiện, F5 vẫn đúng trang đang xem.
+ * Dashboard › Người dùng (A-07): danh sách tài khoản cả 3 role, tìm theo tên/email, lọc theo vai trò,
+ * phân trang ở backend. Admin và Staff tạo/sửa được ở đây, Customer chỉ xem (tự đăng ký, không sửa ở đây).
  */
-export default function DashboardStaff() {
+export default function DashboardUsers() {
   const { fetchWithAuth } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const location = useLocation()
   const navigate = useNavigate()
 
   const q = searchParams.get('q') ?? ''
+  const role = searchParams.get('role') ?? ''
   const page = Math.max(1, Number(searchParams.get('page')) || 1)
-  const params = useMemo(() => ({ q, page: page - 1, size: PAGE_SIZE }), [q, page])
-  const { data, error, loading, reload } = useEventPage((p) => getStaffPage(fetchWithAuth, p), params)
+  const params = useMemo(() => ({ q, role, page: page - 1, size: PAGE_SIZE }), [q, role, page])
+  const { data, error, loading, reload } = useEventPage((p) => getUserPage(fetchWithAuth, p), params)
 
   // Ô tìm gõ tới đâu hiện tới đó, chỉ gọi backend khi ngừng gõ 400ms
   const [qInput, setQInput] = useState(q)
@@ -119,7 +113,7 @@ export default function DashboardStaff() {
 
   useEffect(() => {
     const previous = document.title
-    document.title = 'Nhân viên · Dashboard · Admit One'
+    document.title = 'Người dùng · Dashboard · Admit One'
     return () => {
       document.title = previous
     }
@@ -133,11 +127,11 @@ export default function DashboardStaff() {
     <div>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="font-display text-heading font-bold text-title">Nhân viên</h1>
-          <p className="mt-2 text-body-sm text-fg-muted">Tài khoản soát vé tại cửa. Nhân viên chỉ check-in được sự kiện được gán.</p>
+          <h1 className="font-display text-heading font-bold text-title">Người dùng</h1>
+          <p className="mt-2 text-body-sm text-fg-muted">Tài khoản Admin, Staff soát vé và Khách hàng.</p>
         </div>
         <Link to="new" className={addLink}>
-          + Thêm nhân viên
+          + Thêm người dùng
         </Link>
       </div>
 
@@ -147,15 +141,23 @@ export default function DashboardStaff() {
         </p>
       )}
 
-      <form role="search" onSubmit={(e) => e.preventDefault()} className="mt-6 max-w-md">
-        <label htmlFor="tim-nhan-vien" className="text-caption font-semibold text-fg-muted">
+      <div role="tablist" aria-label="Lọc theo vai trò" className="mt-6 flex flex-wrap gap-1">
+        {ROLE_TABS.map((tab) => (
+          <button key={tab.value || 'all'} type="button" role="tab" aria-selected={role === tab.value} className={roleTab(role === tab.value)} onClick={() => update({ role: tab.value })}>
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      <form role="search" onSubmit={(e) => e.preventDefault()} className="mt-4 max-w-md">
+        <label htmlFor="tim-nguoi-dung" className="text-caption font-semibold text-fg-muted">
           Tìm theo tên hoặc email
         </label>
-        <input id="tim-nhan-vien" type="search" className={`${input} mt-1`} placeholder="Nguyễn, @gmail.com..." value={qInput} maxLength={100} onChange={(e) => setQInput(e.target.value)} />
+        <input id="tim-nguoi-dung" type="search" className={`${input} mt-1`} placeholder="Nguyễn, @gmail.com..." value={qInput} maxLength={100} onChange={(e) => setQInput(e.target.value)} />
       </form>
 
       <div className="mt-3 flex min-h-11 flex-wrap items-center justify-between gap-2 text-body-sm text-fg-muted">
-        <p aria-live="polite">{data ? (data.totalItems ? `Hiển thị ${firstShown}–${lastShown} trên ${data.totalItems} nhân viên` : 'Không có nhân viên nào') : 'Đang tải...'}</p>
+        <p aria-live="polite">{data ? (data.totalItems ? `Hiển thị ${firstShown}–${lastShown} trên ${data.totalItems} người dùng` : 'Không có người dùng nào') : 'Đang tải...'}</p>
         {q && (
           <button
             type="button"
@@ -170,12 +172,12 @@ export default function DashboardStaff() {
         )}
       </div>
 
-      <section aria-label="Danh sách nhân viên" aria-busy={loading} className={`mt-1 rounded-card border border-card-line bg-surface px-card py-2 transition-opacity ${loading && data ? 'opacity-60' : ''}`}>
+      <section aria-label="Danh sách người dùng" aria-busy={loading} className={`mt-1 rounded-card border border-card-line bg-surface px-card py-2 transition-opacity ${loading && data ? 'opacity-60' : ''}`}>
         <div aria-hidden="true" className={`hidden gap-x-4 border-b border-line py-3 text-caption font-semibold text-fg-muted md:grid ${ROW_COLUMNS}`}>
           <span />
-          <span>Nhân viên</span>
+          <span>Người dùng</span>
           <span>Điện thoại</span>
-          <span>Sự kiện được gán</span>
+          <span>Vai trò</span>
           <span />
         </div>
 
@@ -201,22 +203,14 @@ export default function DashboardStaff() {
 
         {!error && data && data.totalItems === 0 && (
           <div className="py-10 text-center">
-            <p className="text-body font-semibold text-title">{q ? 'Không có nhân viên nào khớp' : 'Chưa có nhân viên nào'}</p>
-            {!q && (
-              <>
-                <p className="mt-1 text-body-sm text-fg-muted">Tạo tài khoản cho nhân viên soát vé rồi gán sự kiện họ phụ trách.</p>
-                <Link to="new" className={`${addLink} mt-4`}>
-                  + Thêm nhân viên
-                </Link>
-              </>
-            )}
+            <p className="text-body font-semibold text-title">{q ? 'Không có người dùng nào khớp' : 'Chưa có người dùng nào'}</p>
           </div>
         )}
 
         {!error && items.length > 0 && (
           <ul>
-            {items.map((s) => (
-              <StaffRow key={s.id} staff={s} />
+            {items.map((u) => (
+              <UserRow key={u.id} user={u} />
             ))}
           </ul>
         )}

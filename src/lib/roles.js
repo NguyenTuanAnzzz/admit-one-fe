@@ -37,9 +37,9 @@ export const DASHBOARD_NAV = [
     roles: [ROLE.ADMIN],
   },
   {
-    path: 'staff',
-    label: 'Nhân viên',
-    description: 'Tạo tài khoản Staff và gán sự kiện được soát vé.',
+    path: 'users',
+    label: 'Người dùng',
+    description: 'Tạo và quản lý tài khoản Admin, Staff, Khách hàng.',
     code: 'A-07',
     roles: [ROLE.ADMIN],
   },

@@ -3,8 +3,8 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import AuthLayout from '../layout/AuthLayout'
 import DashboardLayout from '../layout/DashboardLayout'
 import PublicLayout from '../layout/PublicLayout'
+import { useAuth } from '../context/AuthContext'
 import { DASHBOARD_NAV, DASHBOARD_ROLES, ROLE } from '../lib/roles'
-import DashboardHome from '../pages/dashboard/DashboardHome'
 import DashboardPlaceholder from '../pages/dashboard/DashboardPlaceholder'
 import HomePage from '../pages/HomePage'
 import LoginPage from '../pages/LoginPage'
@@ -21,8 +21,8 @@ import ProtectRoute from './ProtectRoute'
 const DashboardEvents = lazy(() => import('../pages/dashboard/DashboardEvents'))
 const DashboardEventForm = lazy(() => import('../pages/dashboard/DashboardEventForm'))
 const DashboardEventDetail = lazy(() => import('../pages/dashboard/DashboardEventDetail'))
-const DashboardStaff = lazy(() => import('../pages/dashboard/DashboardStaff'))
-const DashboardStaffForm = lazy(() => import('../pages/dashboard/DashboardStaffForm'))
+const DashboardUsers = lazy(() => import('../pages/dashboard/DashboardUsers'))
+const DashboardUserForm = lazy(() => import('../pages/dashboard/DashboardUserForm'))
 // Trang chi tiết sự kiện cho khách: tải khi mở. Suspense chờ tải nằm ở PublicLayout
 const EventDetailPage = lazy(() => import('../pages/EventDetailPage'))
 // Đơn của tôi: chỉ khách hàng dùng, tải khi mở
@@ -39,11 +39,18 @@ const DASHBOARD_PAGES = {
     [':id', DashboardEventDetail],
     [':id/edit', DashboardEventForm],
   ],
-  staff: [
-    ['', DashboardStaff],
-    ['new', DashboardStaffForm],
-    [':id', DashboardStaffForm],
+  users: [
+    ['', DashboardUsers],
+    ['new', DashboardUserForm],
+    [':id', DashboardUserForm],
   ],
+}
+
+// Vào /dashboard thì đưa thẳng tới mục đầu tiên role này được dùng (Admin: Tổng quan, Staff: Check-in)
+function DashboardIndexRedirect() {
+  const { user } = useAuth()
+  const firstItem = DASHBOARD_NAV.find((item) => item.roles.includes(user.role))
+  return <Navigate to={firstItem.path} replace />
 }
 
 export default function AppRoute() {
@@ -82,7 +89,7 @@ export default function AppRoute() {
         {/* Admin và Staff vào chung /dashboard, mỗi trang con tự giới hạn role theo DASHBOARD_NAV */}
         <Route element={<ProtectRole roles={DASHBOARD_ROLES} />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<DashboardHome />} />
+            <Route index element={<DashboardIndexRedirect />} />
             {DASHBOARD_NAV.map((item) => {
               const pages = DASHBOARD_PAGES[item.path]
               return (
