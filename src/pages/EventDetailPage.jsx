@@ -49,7 +49,7 @@ export default function EventDetailPage() {
   const location = useLocation()
   const { user, loading: authLoading } = useAuth()
   const detail = useEventDetail(id)
-  const { loading, error, notFound, reload, event, tiers, canSelect, canPick, maxTickets, counts, totalCount, maxFor, setCount, clearSelection, selected, total } = detail
+  const { loading, error, notFound, reload, event, tiers, liveTickets, canSelect, canPick, maxTickets, counts, totalCount, maxFor, setCount, clearSelection, selected, total } = detail
   const hold = useCreateOrder()
   const isCustomer = user?.role === ROLE.CUSTOMER
 
@@ -191,7 +191,13 @@ export default function EventDetailPage() {
         {tiers.length === 0 ? (
           <p className={`${card} mt-4 text-body-sm text-fg-muted`}>Sự kiện chưa có giá vé. Ban tổ chức sẽ cập nhật trước giờ mở bán.</p>
         ) : (
-          <ul className="mt-4 grid gap-3">
+          <>
+            {/* Bài 5.3: số vé còn lại tự cập nhật qua WebSocket, không cần F5 */}
+            <p className="mt-4 flex items-center gap-1.5 text-body-sm text-fg-muted">
+              <span className={`inline-block h-2 w-2 rounded-full ${liveTickets ? 'bg-emerald-500' : 'bg-fg-muted/40'}`} aria-hidden />
+              {liveTickets ? 'Số vé còn lại cập nhật trực tiếp' : 'Đang kết nối cập nhật trực tiếp…'}
+            </p>
+            <ul className="mt-2 grid gap-3">
             {tiers.map((t) => {
               const count = counts[t.id] ?? 0
               const max = maxFor(t)
@@ -225,7 +231,8 @@ export default function EventDetailPage() {
                 </li>
               )
             })}
-          </ul>
+            </ul>
+          </>
         )}
         {canSelect && totalCount >= maxTickets && <p className="mt-3 text-body-sm text-fg-muted">Bạn đã chọn đủ {maxTickets} vé, mức tối đa cho một tài khoản.</p>}
       </section>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getPublicEvent } from '../api/publicEventApi'
+import useLiveTicketAvailability from './useLiveTicketAvailability'
 
 // Đặc tả C-05 và 5.6: tối đa 4 vé mỗi tài khoản mỗi sự kiện, trừ khi sự kiện đặt khác. Backend kiểm tra lại khi giữ vé
 const DEFAULT_MAX_TICKETS = 4
@@ -36,8 +37,20 @@ export default function useEventDetail(eventId) {
 
   const loading = result.key !== key
   const event = loading ? null : result.event
-  const tiers = loading ? [] : result.tiers
   const counts = picked.key === key ? picked.counts : {}
+
+  // Bài 5.3 (bài 21 của khoá): số vé còn lại cập nhật realtime, ghép đè lên snapshot vừa tải bằng
+  // ticketsVersion. Lỡ tin ở giữa (vd mất mạng một lúc) thì onGap chủ động tải lại snapshot,
+  // đúng nguyên tắc "phát hiện khoảng trống thì tự lành" thay vì hiển thị sai mãi.
+  const { available: liveAvailable, live } = useLiveTicketAvailability(
+    loading ? null : eventId,
+    loading ? null : event?.ticketsVersion ?? null,
+    () => setReloadKey((k) => k + 1),
+  )
+
+  const tiers = loading
+    ? []
+    : result.tiers.map((t) => (t.id in liveAvailable ? { ...t, available: liveAvailable[t.id] } : t))
 
   const maxTickets = event?.maxTicketsPerUser ?? DEFAULT_MAX_TICKETS
   const canSelect = event?.status === 'ON_SALE'
@@ -66,6 +79,7 @@ export default function useEventDetail(eventId) {
     reload: () => setReloadKey((k) => k + 1),
     event,
     tiers,
+    liveTickets: live, // đang nhận cập nhật realtime hay không (true sau khi WebSocket kết nối xong)
     canSelect,
     canPick,
     maxTickets,
