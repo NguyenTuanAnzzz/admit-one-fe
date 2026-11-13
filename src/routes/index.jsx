@@ -26,6 +26,7 @@ const DashboardUserForm = lazy(() => import('../pages/dashboard/DashboardUserFor
 const DashboardOrders = lazy(() => import('../pages/dashboard/DashboardOrders'))
 const DashboardOrderPayments = lazy(() => import('../pages/dashboard/DashboardOrderPayments'))
 const DashboardCheckin = lazy(() => import('../pages/dashboard/DashboardCheckin'))
+const DashboardOverview = lazy(() => import('../pages/dashboard/DashboardOverview'))
 // Trang chi tiết sự kiện cho khách: tải khi mở. Suspense chờ tải nằm ở PublicLayout
 const EventDetailPage = lazy(() => import('../pages/EventDetailPage'))
 // Đơn của tôi: chỉ khách hàng dùng, tải khi mở
@@ -52,6 +53,7 @@ const DASHBOARD_PAGES = {
     [':id', DashboardOrderPayments],
   ],
   checkin: [['', DashboardCheckin]],
+  overview: [['', DashboardOverview]],
 }
 
 // Vào /dashboard thì đưa thẳng tới mục đầu tiên role này được dùng (Admin: Tổng quan, Staff: Check-in)
